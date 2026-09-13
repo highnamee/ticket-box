@@ -33,10 +33,14 @@ func (Ticket) TableName() string {
 	return "tickets"
 }
 
-// BeforeCreate hook to generate UUID if not provided
+// BeforeCreate hook to generate UUID v7 (Time-Ordered) if not provided
 func (t *Ticket) BeforeCreate(_ *gorm.DB) error {
 	if t.ID == uuid.Nil {
-		t.ID = uuid.New()
+		id, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		t.ID = id
 	}
 	return nil
 }

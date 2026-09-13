@@ -34,8 +34,20 @@ Follow the established layered pattern strictly:
 1. **Domain Layer (`internal/domain/`)**:
    - Contains entity structs, value objects, domain errors, and interface contracts (`Repository`, `Service`).
    - Must remain pure Go: **No framework imports (Gin, HTTP) or database driver dependencies**.
-   - Primary Keys: Always use `uuid.UUID` (`gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`).
-   - Hook: Include `BeforeCreate(tx *gorm.DB) error` to set `uuid.New()` if `uuid.Nil`.
+   - Primary Keys: Always use **UUID v7 (Time-Ordered)** with `ID uuid.UUID` (`gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`).
+   - Hook: Include `BeforeCreate(_ *gorm.DB) error` generating `uuid.NewV7()` when `t.ID == uuid.Nil`:
+     ```go
+     func (t *Entity) BeforeCreate(_ *gorm.DB) error {
+         if t.ID == uuid.Nil {
+             id, err := uuid.NewV7()
+             if err != nil {
+                 return err
+             }
+             t.ID = id
+         }
+         return nil
+     }
+     ```
 
 2. **Repository Layer (`internal/repository/postgres/`)**:
    - Implements domain repository interfaces using GORM and PostgreSQL.

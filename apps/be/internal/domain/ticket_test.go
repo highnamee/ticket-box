@@ -35,3 +35,24 @@ func TestTicket_DefaultsAndStatus(t *testing.T) {
 	assert.Equal(t, 100, ticket.AvailableStock)
 	assert.Equal(t, TicketStatusActive, ticket.Status)
 }
+
+func TestTicket_BeforeCreate_GeneratesUUIDv7(t *testing.T) {
+	ticket := Ticket{
+		Name: "General Admission",
+	}
+
+	err := ticket.BeforeCreate(nil)
+	assert.NoError(t, err)
+	assert.NotEqual(t, uuid.Nil, ticket.ID)
+	assert.Equal(t, uuid.Version(7), ticket.ID.Version())
+
+	// Preserves existing ID if already set
+	customID, _ := uuid.NewV7()
+	ticketWithID := Ticket{
+		ID:   customID,
+		Name: "VIP",
+	}
+	err = ticketWithID.BeforeCreate(nil)
+	assert.NoError(t, err)
+	assert.Equal(t, customID, ticketWithID.ID)
+}
