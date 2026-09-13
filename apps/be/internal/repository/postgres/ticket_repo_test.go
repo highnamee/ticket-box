@@ -71,6 +71,57 @@ func TestTicketRepository_FindAll(t *testing.T) {
 	assert.GreaterOrEqual(t, len(tickets), 2)
 }
 
+func TestTicketRepository_FindPublic(t *testing.T) {
+	tx := testutil.SetupTestDB(t)
+	repo := postgres.NewTicketRepository(tx)
+	ctx := context.Background()
+
+	activeTicket := &domain.Ticket{
+		Name:           "Active General Ticket",
+		Price:          50.00,
+		TotalQuantity:  100,
+		AvailableStock: 100,
+		Status:         domain.TicketStatusActive,
+	}
+	inactiveTicket := &domain.Ticket{
+		Name:           "Inactive Draft Ticket",
+		Price:          40.00,
+		TotalQuantity:  50,
+		AvailableStock: 50,
+		Status:         domain.TicketStatusInactive,
+	}
+	soldOutTicket := &domain.Ticket{
+		Name:           "Sold Out VIP Ticket",
+		Price:          150.00,
+		TotalQuantity:  20,
+		AvailableStock: 0,
+		Status:         domain.TicketStatusSoldOut,
+	}
+
+	require.NoError(t, repo.Create(ctx, activeTicket))
+	require.NoError(t, repo.Create(ctx, inactiveTicket))
+	require.NoError(t, repo.Create(ctx, soldOutTicket))
+
+	publicList, err := repo.FindPublic(ctx)
+	require.NoError(t, err)
+
+	// Ensure ACTIVE and SOLD_OUT tickets are included, INACTIVE is excluded
+	foundActive := false
+	foundSoldOut := false
+	for _, tk := range publicList {
+		assert.Contains(t, []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut}, tk.Status)
+		if tk.ID == activeTicket.ID {
+			foundActive = true
+		}
+		if tk.ID == soldOutTicket.ID {
+			foundSoldOut = true
+		}
+		assert.NotEqual(t, inactiveTicket.ID, tk.ID, "Inactive ticket should not be returned in public scope")
+	}
+	assert.True(t, foundActive, "Expected activeTicket to be found in FindPublic results")
+	assert.True(t, foundSoldOut, "Expected soldOutTicket to be found in FindPublic results")
+}
+
 func TestTicketRepository_Update(t *testing.T) {
 	tx := testutil.SetupTestDB(t)
 	repo := postgres.NewTicketRepository(tx)

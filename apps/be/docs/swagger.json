@@ -37,9 +37,95 @@
                     }
                 }
             }
+        },
+        "/tickets": {
+            "get": {
+                "description": "Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get public tickets",
+                "responses": {
+                    "200": {
+                        "description": "Tickets retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/domain.Ticket"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "domain.Ticket": {
+            "type": "object",
+            "properties": {
+                "available_stock": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "$ref": "#/definitions/domain.TicketStatus"
+                },
+                "total_quantity": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.TicketStatus": {
+            "type": "string",
+            "enum": [
+                "ACTIVE",
+                "SOLD_OUT",
+                "INACTIVE"
+            ],
+            "x-enum-varnames": [
+                "TicketStatusActive",
+                "TicketStatusSoldOut",
+                "TicketStatusInactive"
+            ]
+        },
         "response.APIResponse": {
             "type": "object",
             "properties": {

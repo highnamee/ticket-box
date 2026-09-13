@@ -13,6 +13,8 @@ import (
 
 	"ticket-box-be/internal/config"
 	httpHandler "ticket-box-be/internal/handler/http"
+	"ticket-box-be/internal/pkg/database"
+	"ticket-box-be/internal/repository/postgres"
 )
 
 // @title                      Ticket Box Backend API
@@ -29,14 +31,25 @@ func main() {
 	// 1. Load Configuration
 	cfg := config.Load()
 
-	// 2. Initialize Handlers
-	healthHandler := httpHandler.NewHealthHandler()
+	// 2. Initialize Database Connection
+	db, err := database.NewDatabase(cfg)
+	if err != nil {
+		log.Fatalf("❌ Failed to connect to database: %v", err)
+	}
 
-	// 3. Setup Router
+	// 3. Initialize Repositories
+	ticketRepo := postgres.NewTicketRepository(db)
+
+	// 4. Initialize Handlers
+	healthHandler := httpHandler.NewHealthHandler()
+	ticketHandler := httpHandler.NewTicketHandler(ticketRepo)
+
+	// 5. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
 		AppConfig:          cfg,
 		AppEnv:             cfg.AppEnv,
 		HealthHandler:      healthHandler,
+		TicketHandler:      ticketHandler,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
 		EnableAdmin:        cfg.EnableAdmin,
 	})

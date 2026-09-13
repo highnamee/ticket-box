@@ -61,7 +61,7 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 			{Value: "SOLD_OUT", Text: "SOLD_OUT"},
 			{Value: "INACTIVE", Text: "INACTIVE"},
 		}).
-		FieldDefault("ACTIVE")
+		FieldDefault("INACTIVE")
 
 	formList.SetTable("tickets").
 		SetTitle("Ticket Details").

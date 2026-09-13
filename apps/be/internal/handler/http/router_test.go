@@ -5,14 +5,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"ticket-box-be/internal/domain"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestRouter_Endpoints(t *testing.T) {
 	healthHandler := NewHealthHandler()
+	mockRepo := new(MockTicketRepository)
+	mockRepo.On("FindPublic", mock.Anything).Return([]domain.Ticket{}, nil)
+	ticketHandler := NewTicketHandler(mockRepo)
+
 	router := NewRouter(RouterConfig{
 		AppEnv:        "development",
 		HealthHandler: healthHandler,
+		TicketHandler: ticketHandler,
 	})
 
 	tests := []struct {
@@ -28,6 +36,11 @@ func TestRouter_Endpoints(t *testing.T) {
 		{
 			name:         "API v1 ping endpoint",
 			url:          "/api/v1/ping",
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "API v1 tickets endpoint",
+			url:          "/api/v1/tickets",
 			expectedCode: http.StatusOK,
 		},
 		{

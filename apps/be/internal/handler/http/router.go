@@ -17,6 +17,7 @@ type RouterConfig struct {
 	AppConfig          *config.Config
 	AppEnv             string
 	HealthHandler      *HealthHandler
+	TicketHandler      *TicketHandler
 	CORSAllowedOrigins []string
 	EnableAdmin        bool
 }
@@ -51,12 +52,19 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	}
 
 	// Health Check Route
-	r.GET("/health", cfg.HealthHandler.Check)
+	if cfg.HealthHandler != nil {
+		r.GET("/health", cfg.HealthHandler.Check)
+	}
 
 	// API V1 Group
 	v1 := r.Group("/api/v1")
 	{
-		v1.GET("/ping", cfg.HealthHandler.Check)
+		if cfg.HealthHandler != nil {
+			v1.GET("/ping", cfg.HealthHandler.Check)
+		}
+		if cfg.TicketHandler != nil {
+			v1.GET("/tickets", cfg.TicketHandler.GetPublicTickets)
+		}
 	}
 
 	return r

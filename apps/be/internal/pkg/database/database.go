@@ -65,6 +65,11 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
+	// Verify database is active and reachable
+	if err := sqlDB.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
 	if cfg.AppEnv != "test" {
 		log.Println("✅ Database connected successfully")
 	}

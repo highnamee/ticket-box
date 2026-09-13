@@ -42,6 +42,15 @@ func (r *TicketRepository) FindAll(ctx context.Context) ([]domain.Ticket, error)
 	return tickets, err
 }
 
+func (r *TicketRepository) FindPublic(ctx context.Context) ([]domain.Ticket, error) {
+	var tickets []domain.Ticket
+	err := r.db.WithContext(ctx).
+		Where("status IN ?", []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut}).
+		Order("price ASC").
+		Find(&tickets).Error
+	return tickets, err
+}
+
 func (r *TicketRepository) Update(ctx context.Context, ticket *domain.Ticket) error {
 	result := r.db.WithContext(ctx).Save(ticket)
 	if result.Error != nil {

@@ -1,29 +1,31 @@
-package domain
+package domain_test
 
 import (
 	"testing"
 	"time"
+
+	"ticket-box-be/internal/domain"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTicket_TableName(t *testing.T) {
-	ticket := Ticket{}
+	ticket := domain.Ticket{}
 	assert.Equal(t, "tickets", ticket.TableName())
 }
 
 func TestTicket_DefaultsAndStatus(t *testing.T) {
 	now := time.Now()
 	testID := uuid.New()
-	ticket := Ticket{
+	ticket := domain.Ticket{
 		ID:             testID,
 		Name:           "VIP Pass",
 		Description:    "Access to VIP lounge",
 		Price:          150.00,
 		TotalQuantity:  100,
 		AvailableStock: 100,
-		Status:         TicketStatusActive,
+		Status:         domain.TicketStatusActive,
 		CreatedAt:      now,
 		UpdatedAt:      now,
 	}
@@ -33,26 +35,49 @@ func TestTicket_DefaultsAndStatus(t *testing.T) {
 	assert.Equal(t, 150.00, ticket.Price)
 	assert.Equal(t, 100, ticket.TotalQuantity)
 	assert.Equal(t, 100, ticket.AvailableStock)
-	assert.Equal(t, TicketStatusActive, ticket.Status)
+	assert.Equal(t, domain.TicketStatusActive, ticket.Status)
 }
 
-func TestTicket_BeforeCreate_GeneratesUUIDv7(t *testing.T) {
-	ticket := Ticket{
-		Name: "General Admission",
-	}
+func TestTicket_BeforeCreate(t *testing.T) {
+	t.Run("generates UUIDv7 when ID is nil", func(t *testing.T) {
+		ticket := domain.Ticket{Name: "General Admission"}
 
-	err := ticket.BeforeCreate(nil)
-	assert.NoError(t, err)
-	assert.NotEqual(t, uuid.Nil, ticket.ID)
-	assert.Equal(t, uuid.Version(7), ticket.ID.Version())
+		err := ticket.BeforeCreate(nil)
+		assert.NoError(t, err)
+		assert.NotEqual(t, uuid.Nil, ticket.ID)
+		assert.Equal(t, uuid.Version(7), ticket.ID.Version())
+	})
 
-	// Preserves existing ID if already set
-	customID, _ := uuid.NewV7()
-	ticketWithID := Ticket{
-		ID:   customID,
-		Name: "VIP",
-	}
-	err = ticketWithID.BeforeCreate(nil)
-	assert.NoError(t, err)
-	assert.Equal(t, customID, ticketWithID.ID)
+	t.Run("preserves existing ID when provided", func(t *testing.T) {
+		customID, err := uuid.NewV7()
+		assert.NoError(t, err)
+
+		ticket := domain.Ticket{
+			ID:   customID,
+			Name: "VIP Pass",
+		}
+
+		err = ticket.BeforeCreate(nil)
+		assert.NoError(t, err)
+		assert.Equal(t, customID, ticket.ID)
+	})
+
+	t.Run("defaults status to INACTIVE when empty", func(t *testing.T) {
+		ticket := domain.Ticket{Name: "Early Bird"}
+
+		err := ticket.BeforeCreate(nil)
+		assert.NoError(t, err)
+		assert.Equal(t, domain.TicketStatusInactive, ticket.Status)
+	})
+
+	t.Run("preserves existing status when provided", func(t *testing.T) {
+		ticket := domain.Ticket{
+			Name:   "VIP Pass",
+			Status: domain.TicketStatusActive,
+		}
+
+		err := ticket.BeforeCreate(nil)
+		assert.NoError(t, err)
+		assert.Equal(t, domain.TicketStatusActive, ticket.Status)
+	})
 }
