@@ -7,6 +7,6 @@ A ticket booking and event management platform.
 ```
 ticket-box/
 ├── apps/
-│   ├── be/     # Golang backend (Gin framework)
-│   └── fe/     # Frontend application
+    ├── be/     # Golang backend (Gin framework)
+    └── fe/     # Frontend application
 ```

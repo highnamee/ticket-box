@@ -60,3 +60,18 @@ func TestNotFoundResponse(t *testing.T) {
 	assert.False(t, res.Success)
 	assert.Equal(t, "Resource not found", res.Message)
 }
+
+func TestInternalServerErrorResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	InternalServerError(c, "")
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var res APIResponse
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	assert.NoError(t, err)
+	assert.False(t, res.Success)
+	assert.Equal(t, "Internal server error", res.Message)
+}
