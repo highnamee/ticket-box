@@ -33,11 +33,9 @@ func loadEnvFromAnywhere() {
 	}
 }
 
-// SetupTestDB initializes connection to PostgreSQL test database and migrates schema.
-// It wraps each test in a transaction that automatically rolls back upon test completion.
-func SetupTestDB(t *testing.T) *gorm.DB {
+// GetTestConfig builds a Config struct configured for test environment and test database
+func GetTestConfig(t *testing.T) *config.Config {
 	t.Helper()
-
 	loadEnvFromAnywhere()
 
 	dbHost := getEnv("TEST_DB_HOST", getEnv("DB_HOST", "localhost"))
@@ -48,9 +46,14 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 	dbName := getEnv("TEST_DB_NAME", "ticketbox_test")
 	dbSSLMode := getEnv("TEST_DB_SSLMODE", "disable")
 
-	cfg := &config.Config{
-		AppEnv: "test",
-		Port:   "8080",
+	return &config.Config{
+		AppEnv:      string(config.EnvTest),
+		Port:        "8080",
+		EnableAdmin: true,
+		Admin: config.AdminConfig{
+			Username: "admin",
+			Password: "admin",
+		},
 		DB: config.DatabaseConfig{
 			Host:     dbHost,
 			Port:     dbPort,
@@ -60,6 +63,14 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 			SSLMode:  dbSSLMode,
 		},
 	}
+}
+
+// SetupTestDB initializes connection to PostgreSQL test database and migrates schema.
+// It wraps each test in a transaction that automatically rolls back upon test completion.
+func SetupTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	cfg := GetTestConfig(t)
 
 	db, err := database.NewDatabase(cfg)
 	if err != nil {

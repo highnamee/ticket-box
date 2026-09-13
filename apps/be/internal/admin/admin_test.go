@@ -21,7 +21,7 @@ func TestGoAdmin_Routes(t *testing.T) {
 		return
 	}
 
-	cfg := config.Load()
+	cfg := testutil.GetTestConfig(t)
 	err := Mount(r, cfg)
 	assert.NoError(t, err)
 
