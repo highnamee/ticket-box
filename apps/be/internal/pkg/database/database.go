@@ -35,9 +35,14 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 		)
 	}
 
-	logLevel := logger.Info
-	if cfg.AppEnv == "production" {
+	var logLevel logger.LogLevel
+	switch cfg.AppEnv {
+	case "test":
+		logLevel = logger.Silent
+	case "production":
 		logLevel = logger.Warn
+	default:
+		logLevel = logger.Info
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
@@ -57,6 +62,9 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	log.Println("✅ Database connected successfully")
+	if cfg.AppEnv != "test" {
+		log.Println("✅ Database connected successfully")
+	}
+
 	return db, nil
 }
