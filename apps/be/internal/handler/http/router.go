@@ -16,6 +16,15 @@ type RouterConfig struct {
 }
 
 func NewRouter(cfg RouterConfig) *gin.Engine {
+	switch cfg.AppEnv {
+	case "production":
+		gin.SetMode(gin.ReleaseMode)
+	case "test":
+		gin.SetMode(gin.TestMode)
+	default:
+		gin.SetMode(gin.DebugMode)
+	}
+
 	r := gin.New()
 
 	// Global Middlewares

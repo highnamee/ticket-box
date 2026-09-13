@@ -13,8 +13,6 @@ apps/be/
 │   │   └── main.go                 # Application entry point (dependency injection, graceful shutdown)
 │   └── migrate/
 │       └── main.go                 # Database auto-migration CLI
-├── configs/
-│   └── .env.example                # Sample environment variables
 ├── docs/                           # Auto-generated OpenAPI / Swagger specs (docs.go, swagger.json, swagger.yaml)
 ├── internal/                       # Private application code (Go compiler protected)
 │   ├── config/                     # Configuration and environment variable loader
@@ -42,6 +40,7 @@ apps/be/
 │   │       ├── ticket_repo.go
 │   │       └── ticket_repo_test.go
 │   └── service/                    # Business logic and use-cases layer
+├── .env.example                # Sample environment variables
 ├── .golangci.yml                   # Linter configuration (golangci-lint)
 ├── Makefile                        # Common developer task automation
 ├── go.mod                          # Go module definitions
