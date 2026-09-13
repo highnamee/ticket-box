@@ -60,3 +60,18 @@ func TestGoAdmin_Routes(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w4.Code)
 	}
 }
+
+func TestInitSchema_ProductionRejectsDefaultPassword(t *testing.T) {
+	prodCfg := &config.Config{
+		AppEnv:      string(config.EnvProduction),
+		EnableAdmin: true,
+		Admin: config.AdminConfig{
+			Username: "admin",
+			Password: "admin",
+		},
+	}
+
+	err := InitSchema(nil, prodCfg)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "refusing to initialize GoAdmin in production with default password")
+}

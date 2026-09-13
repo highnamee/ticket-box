@@ -99,11 +99,7 @@ CREATE TABLE IF NOT EXISTS goadmin_site (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed Default GoAdmin Administrator & Roles
-INSERT INTO goadmin_users (id, username, password, name, avatar, remember_token)
-VALUES (1, 'admin', '$2a$10$OxWYJJGTP2gi00l2x06QuOWqw5VR47MQCJ0vNKnbMYfrutij10Hwe', 'admin', '', 'tlNcBVK9AvfYH7WEnwB1RKvocJu8FfRy4um3DJtwdHuJy0dwFsLOgAc0xUfh')
-ON CONFLICT (id) DO NOTHING;
-
+-- Seed Default GoAdmin Roles & Permissions
 INSERT INTO goadmin_roles (id, name, slug)
 VALUES (1, 'Administrator', 'administrator'), (2, 'Operator', 'operator')
 ON CONFLICT (id) DO NOTHING;

@@ -56,7 +56,7 @@ func main() {
 		if cfg.EnableAdmin {
 			log.Printf("🛠️  GoAdmin Panel available at http://localhost:%s/admin", cfg.Port)
 		}
-		if cfg.AppEnv != "production" {
+		if !cfg.IsProduction() {
 			log.Printf("📖 Swagger UI available at http://localhost:%s/swagger/index.html", cfg.Port)
 		}
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

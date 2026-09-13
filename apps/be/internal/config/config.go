@@ -8,12 +8,48 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Environment represents the application deployment environment
+type Environment string
+
+const (
+	EnvDevelopment Environment = "development"
+	EnvStaging     Environment = "staging"
+	EnvProduction  Environment = "production"
+	EnvTest        Environment = "test"
+)
+
 type Config struct {
 	AppEnv      string
 	Port        string
 	EnableAdmin bool
+	Admin       AdminConfig
 	DB          DatabaseConfig
 	CORS        CORSConfig
+}
+
+// IsProduction checks if current environment is production
+func (c *Config) IsProduction() bool {
+	return c.AppEnv == string(EnvProduction)
+}
+
+// IsDevelopment checks if current environment is development
+func (c *Config) IsDevelopment() bool {
+	return c.AppEnv == string(EnvDevelopment)
+}
+
+// IsStaging checks if current environment is staging
+func (c *Config) IsStaging() bool {
+	return c.AppEnv == string(EnvStaging)
+}
+
+// IsTest checks if current environment is test
+func (c *Config) IsTest() bool {
+	return c.AppEnv == string(EnvTest)
+}
+
+type AdminConfig struct {
+	Username string
+	Password string
 }
 
 type DatabaseConfig struct {
@@ -33,8 +69,16 @@ func Load() *Config {
 	_ = godotenv.Load(".env", "apps/be/.env")
 
 	port := getEnv("PORT", "8080")
-	appEnv := getEnv("APP_ENV", "development")
-	enableAdmin, _ := strconv.ParseBool(getEnv("ENABLE_ADMIN", "true"))
+	appEnv := getEnv("APP_ENV", string(EnvDevelopment))
+
+	defaultEnableAdmin := "true"
+	if appEnv == string(EnvProduction) {
+		defaultEnableAdmin = "false"
+	}
+	enableAdmin, _ := strconv.ParseBool(getEnv("ENABLE_ADMIN", defaultEnableAdmin))
+
+	adminUser := getEnv("ADMIN_USERNAME", "admin")
+	adminPass := getEnv("ADMIN_PASSWORD", "admin")
 
 	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
 
@@ -53,6 +97,10 @@ func Load() *Config {
 		AppEnv:      appEnv,
 		Port:        port,
 		EnableAdmin: enableAdmin,
+		Admin: AdminConfig{
+			Username: adminUser,
+			Password: adminPass,
+		},
 		DB: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,

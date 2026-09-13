@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// 2. Migrate GoAdmin Internal Schema
-	if err := admin.InitSchema(db); err != nil {
+	if err := admin.InitSchema(db, cfg); err != nil {
 		log.Fatalf("❌ GoAdmin schema initialization failed: %v", err)
 	}
 

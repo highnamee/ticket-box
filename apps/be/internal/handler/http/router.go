@@ -23,9 +23,9 @@ type RouterConfig struct {
 
 func NewRouter(cfg RouterConfig) *gin.Engine {
 	switch cfg.AppEnv {
-	case "production":
+	case string(config.EnvProduction):
 		gin.SetMode(gin.ReleaseMode)
-	case "test":
+	case string(config.EnvTest):
 		gin.SetMode(gin.TestMode)
 	default:
 		gin.SetMode(gin.DebugMode)
@@ -46,7 +46,7 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	}
 
 	// Swagger Documentation UI (disabled in production)
-	if cfg.AppEnv != "production" {
+	if cfg.AppEnv != string(config.EnvProduction) {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 

@@ -32,7 +32,7 @@ func Mount(r *gin.Engine, appCfg *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to database for GoAdmin: %w", err)
 	}
-	if err := InitSchema(db); err != nil {
+	if err := InitSchema(db, appCfg); err != nil {
 		return fmt.Errorf("failed to initialize GoAdmin database schema: %w", err)
 	}
 
@@ -47,7 +47,7 @@ func Mount(r *gin.Engine, appCfg *config.Config) error {
 		},
 		UrlPrefix: "admin",
 		IndexUrl:  "/info/tickets",
-		Debug:     appCfg.AppEnv != "production",
+		Debug:     !appCfg.IsProduction(),
 		Language:  language.EN,
 		Theme:     "adminlte",
 		Title:     "Ticket Box Admin",

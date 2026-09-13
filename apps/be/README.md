@@ -135,7 +135,8 @@ make lint
 ### GoAdmin Management Panel (Web UI)
 
 - **URL**: `http://localhost:8080/admin`
-- **Default Credentials**: Username: `admin` / Password: `admin`
+- **Credentials (Configurable)**: Defaults to `admin` / `admin` in development via `ADMIN_USERNAME` and `ADMIN_PASSWORD` env variables.
+- **Environment**: **Disabled by default in Production** (`APP_ENV=production`) unless `ENABLE_ADMIN=true` is explicitly configured with strong credentials.
 - **Description**: Full-featured database & entity management dashboard (AdminLTE theme) for managing Tickets, inventory, roles, permissions, and audit logs.
 
 ### Swagger OpenAPI Documentation (Web UI)
