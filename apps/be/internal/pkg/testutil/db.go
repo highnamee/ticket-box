@@ -14,15 +14,21 @@ import (
 	"gorm.io/gorm"
 )
 
-func loadEnvFromAnywhere() {
+func loadTestEnv() {
+	// 1. Direct try .env.test from current directory or apps/be/.env.test
+	if err := godotenv.Load(".env.test", "apps/be/.env.test"); err == nil {
+		return
+	}
+
+	// 2. Search upwards strictly for .env.test if executed inside subpackages
 	dir, err := os.Getwd()
 	if err != nil {
 		return
 	}
 	for i := 0; i < 5; i++ {
-		envPath := filepath.Join(dir, ".env")
-		if _, err := os.Stat(envPath); err == nil {
-			_ = godotenv.Load(envPath)
+		testEnvPath := filepath.Join(dir, ".env.test")
+		if _, err := os.Stat(testEnvPath); err == nil {
+			_ = godotenv.Load(testEnvPath)
 			return
 		}
 		parent := filepath.Dir(dir)
@@ -33,26 +39,26 @@ func loadEnvFromAnywhere() {
 	}
 }
 
-// GetTestConfig builds a Config struct configured for test environment and test database
+// GetTestConfig builds a Config struct configured strictly for test environment and test database
 func GetTestConfig(t *testing.T) *config.Config {
 	t.Helper()
-	loadEnvFromAnywhere()
+	loadTestEnv()
 
-	dbHost := getEnv("TEST_DB_HOST", getEnv("DB_HOST", "localhost"))
-	dbPortStr := getEnv("TEST_DB_PORT", getEnv("DB_PORT", "5432"))
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbPortStr := getEnv("DB_PORT", "5432")
 	dbPort, _ := strconv.Atoi(dbPortStr)
-	dbUser := getEnv("TEST_DB_USER", getEnv("DB_USER", "postgres"))
-	dbPassword := getEnv("TEST_DB_PASSWORD", getEnv("DB_PASSWORD", ""))
-	dbName := getEnv("TEST_DB_NAME", "ticketbox_test")
-	dbSSLMode := getEnv("TEST_DB_SSLMODE", "disable")
+	dbUser := getEnv("DB_USER", "postgres")
+	dbPassword := getEnv("DB_PASSWORD", "")
+	dbName := getEnv("DB_NAME", "ticketbox_test")
+	dbSSLMode := getEnv("DB_SSLMODE", "disable")
 
 	return &config.Config{
 		AppEnv:      string(config.EnvTest),
-		Port:        "8080",
+		Port:        getEnv("PORT", "8080"),
 		EnableAdmin: true,
 		Admin: config.AdminConfig{
-			Username: "admin",
-			Password: "admin",
+			Username: getEnv("ADMIN_USERNAME", "admin"),
+			Password: getEnv("ADMIN_PASSWORD", "admin"),
 		},
 		DB: config.DatabaseConfig{
 			Host:     dbHost,

@@ -13,9 +13,9 @@ Thumbs.db
 
 # Environment variables
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
+!.env.test.example
 
 # Go
 apps/be/bin/

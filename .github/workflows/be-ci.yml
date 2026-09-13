@@ -72,12 +72,12 @@ jobs:
       run:
         working-directory: apps/be
     env:
-      TEST_DB_HOST: localhost
-      TEST_DB_PORT: 5432
-      TEST_DB_USER: postgres
-      TEST_DB_PASSWORD: postgrespassword
-      TEST_DB_NAME: ticketbox_test
-      TEST_DB_SSLMODE: disable
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+      DB_NAME: ticketbox_test
+      DB_SSLMODE: disable
 
     steps:
       - name: Checkout Code
