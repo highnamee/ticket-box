@@ -1,4 +1,4 @@
-.PHONY: help run build test test-coverage lint fmt vet tidy clean
+.PHONY: help run build test test-coverage lint fmt vet tidy clean migrate
 
 # Default binary name
 BIN_DIR = bin
@@ -10,6 +10,9 @@ help: ## Display available commands
 
 run: ## Run application locally
 	go run ./cmd/api/main.go
+
+migrate: ## Run database migrations
+	go run ./cmd/migrate/main.go
 
 build: ## Build binary executable
 	@mkdir -p $(BIN_DIR)

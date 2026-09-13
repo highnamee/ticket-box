@@ -76,6 +76,7 @@ The project includes a `Makefile` with common tasks:
 |----------------------|---------------------------------------------------------|
 | `make run`           | Starts the API server locally                           |
 | `make build`         | Compiles the binary to `bin/api`                        |
+| `make migrate`       | Runs database migrations (`cmd/migrate`)                |
 | `make test`          | Runs all unit tests with race condition detection       |
 | `make test-coverage` | Runs unit tests and generates HTML coverage report      |
 | `make lint`          | Runs `golangci-lint` against all packages               |

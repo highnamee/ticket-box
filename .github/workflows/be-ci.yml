@@ -44,9 +44,32 @@ jobs:
   test:
     name: Test & Build Backend
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: ticketbox_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: apps/be
+    env:
+      TEST_DB_HOST: localhost
+      TEST_DB_PORT: 5432
+      TEST_DB_USER: postgres
+      TEST_DB_PASSWORD: postgrespassword
+      TEST_DB_NAME: ticketbox_test
+      TEST_DB_SSLMODE: disable
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -64,7 +87,7 @@ jobs:
       - name: Run Vet Analysis
         run: go vet ./...
 
-      - name: Run Unit Tests
+      - name: Run Tests (Unit & PostgreSQL Integration)
         run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Build Binary

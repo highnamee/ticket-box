@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -21,6 +23,9 @@ type DatabaseConfig struct {
 }
 
 func Load() *Config {
+	// Load .env file if it exists, ignore error if missing (e.g. in CI or Production)
+	_ = godotenv.Load()
+
 	port := getEnv("PORT", "8080")
 	appEnv := getEnv("APP_ENV", "development")
 
@@ -33,7 +38,7 @@ func Load() *Config {
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,
 			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "postgres"),
+			Password: getEnv("DB_PASSWORD", ""),
 			DBName:   getEnv("DB_NAME", "ticketbox_db"),
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
@@ -41,7 +46,7 @@ func Load() *Config {
 }
 
 func getEnv(key, defaultVal string) string {
-	if val, exists := os.LookupEnv(key); exists {
+	if val, exists := os.LookupEnv(key); exists && val != "" {
 		return val
 	}
 	return defaultVal
