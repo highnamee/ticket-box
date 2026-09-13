@@ -34,11 +34,21 @@ jobs:
           check-latest: true
           cache-dependency-path: apps/be/go.sum
 
+      - name: Cache golangci-lint Binary
+        uses: actions/cache@v4
+        id: cache-golangci-lint
+        with:
+          path: ~/go/bin/golangci-lint
+          key: ${{ runner.os }}-golangci-lint-v1.64
+
       - name: Install golangci-lint
+        if: steps.cache-golangci-lint.outputs.cache-hit != 'true'
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
       - name: Run golangci-lint
-        run: golangci-lint run ./... --timeout=5m
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          golangci-lint run ./... --timeout=5m
 
   test:
     name: Test & Build Backend
