@@ -34,7 +34,7 @@ func (Ticket) TableName() string {
 }
 
 // BeforeCreate hook to generate UUID if not provided
-func (t *Ticket) BeforeCreate(tx *gorm.DB) error {
+func (t *Ticket) BeforeCreate(_ *gorm.DB) error {
 	if t.ID == uuid.Nil {
 		t.ID = uuid.New()
 	}

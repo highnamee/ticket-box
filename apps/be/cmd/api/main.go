@@ -15,6 +15,16 @@ import (
 	httpHandler "ticket-box-be/internal/handler/http"
 )
 
+// @title                      Ticket Box Backend API
+// @version                    1.0
+// @description                RESTful API documentation for the Ticket Box event booking platform.
+// @contact.name               Ticket Box Team
+// @host                       localhost:8080
+// @BasePath                   /api/v1
+// @schemes                    http https
+// @produce                    json
+// @consume                    json
+
 func main() {
 	// 1. Load Configuration
 	cfg := config.Load()
@@ -24,6 +34,7 @@ func main() {
 
 	// 3. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
+		AppEnv:             cfg.AppEnv,
 		HealthHandler:      healthHandler,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
 	})
@@ -40,6 +51,9 @@ func main() {
 	// 5. Start Server in a separate goroutine
 	go func() {
 		log.Printf("🚀 Ticket Box Backend running on http://localhost:%s (Env: %s)", cfg.Port, cfg.AppEnv)
+		if cfg.AppEnv != "production" {
+			log.Printf("📖 Swagger UI available at http://localhost:%s/swagger/index.html", cfg.Port)
+		}
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Server error: %v", err)
 		}

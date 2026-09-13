@@ -74,8 +74,10 @@ Follow the established layered pattern strictly:
 ## ⚡ Useful Commands
 
 ```bash
+make setup          # Install developer CLI tools (swag, golangci-lint) & dependencies
 make run            # Start API server locally
 make migrate        # Run database migrations
+make swagger        # Generate OpenAPI/Swagger docs into docs/
 make test           # Run unit & PostgreSQL integration tests
 make test-coverage  # Run tests with HTML coverage report
 make lint           # Run golangci-lint

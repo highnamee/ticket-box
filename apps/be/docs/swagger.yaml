@@ -1,0 +1,38 @@
+basePath: /api/v1
+definitions:
+  response.APIResponse:
+    properties:
+      data: {}
+      error: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: Ticket Box Team
+  description: RESTful API documentation for the Ticket Box event booking platform.
+  title: Ticket Box Backend API
+  version: "1.0"
+paths:
+  /ping:
+    get:
+      description: Returns system health status and server timestamp
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API is healthy
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Health check
+      tags:
+      - System
+produces:
+- application/json
+schemes:
+- http
+- https
+swagger: "2.0"
