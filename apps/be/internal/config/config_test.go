@@ -1,18 +1,18 @@
 package config
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLoad_DefaultValues(t *testing.T) {
-	// Clear relevant environment variables
-	os.Unsetenv("PORT")
-	os.Unsetenv("APP_ENV")
-	os.Unsetenv("DB_PORT")
-	os.Unsetenv("CORS_ALLOWED_ORIGINS")
+	t.Setenv("PORT", "")
+	t.Setenv("APP_ENV", "")
+	t.Setenv("DB_HOST", "")
+	t.Setenv("DB_PORT", "")
+	t.Setenv("DB_NAME", "")
+	t.Setenv("CORS_ALLOWED_ORIGINS", "")
 
 	cfg := Load()
 
@@ -25,20 +25,12 @@ func TestLoad_DefaultValues(t *testing.T) {
 }
 
 func TestLoad_CustomEnvValues(t *testing.T) {
-	os.Setenv("PORT", "9090")
-	os.Setenv("APP_ENV", "production")
-	os.Setenv("DB_HOST", "db.internal")
-	os.Setenv("DB_PORT", "5433")
-	os.Setenv("DB_NAME", "production_db")
-	os.Setenv("CORS_ALLOWED_ORIGINS", "https://ticketbox.com, https://admin.ticketbox.com")
-	defer func() {
-		os.Unsetenv("PORT")
-		os.Unsetenv("APP_ENV")
-		os.Unsetenv("DB_HOST")
-		os.Unsetenv("DB_PORT")
-		os.Unsetenv("DB_NAME")
-		os.Unsetenv("CORS_ALLOWED_ORIGINS")
-	}()
+	t.Setenv("PORT", "9090")
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("DB_HOST", "db.internal")
+	t.Setenv("DB_PORT", "5433")
+	t.Setenv("DB_NAME", "production_db")
+	t.Setenv("CORS_ALLOWED_ORIGINS", "https://ticketbox.com, https://admin.ticketbox.com")
 
 	cfg := Load()
 

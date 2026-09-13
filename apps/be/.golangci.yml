@@ -3,12 +3,8 @@ run:
   tests: true
 
 linters-settings:
-  govet:
-    shadow: true
   gocyclo:
     min-complexity: 15
-  dupl:
-    threshold: 100
   goconst:
     min-len: 2
     min-occurrences: 3
@@ -16,10 +12,8 @@ linters-settings:
     locale: US
   lll:
     line-length: 120
-  revive:
-    rules:
-      - name: exported
-        arguments: [false]
+  errcheck:
+    check-type-assertions: true
 
 linters:
   enable:
