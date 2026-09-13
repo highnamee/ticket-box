@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	AppEnv string
-	Port   string
-	DB     DatabaseConfig
-	CORS   CORSConfig
+	AppEnv      string
+	Port        string
+	EnableAdmin bool
+	DB          DatabaseConfig
+	CORS        CORSConfig
 }
 
 type DatabaseConfig struct {
@@ -29,11 +30,11 @@ type CORSConfig struct {
 }
 
 func Load() *Config {
-	// Load .env file if it exists, ignore error if missing (e.g. in CI or Production)
-	_ = godotenv.Load()
+	_ = godotenv.Load(".env", "apps/be/.env")
 
 	port := getEnv("PORT", "8080")
 	appEnv := getEnv("APP_ENV", "development")
+	enableAdmin, _ := strconv.ParseBool(getEnv("ENABLE_ADMIN", "true"))
 
 	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
 
@@ -49,8 +50,9 @@ func Load() *Config {
 	}
 
 	return &Config{
-		AppEnv: appEnv,
-		Port:   port,
+		AppEnv:      appEnv,
+		Port:        port,
+		EnableAdmin: enableAdmin,
 		DB: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,

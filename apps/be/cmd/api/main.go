@@ -34,9 +34,11 @@ func main() {
 
 	// 3. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
+		AppConfig:          cfg,
 		AppEnv:             cfg.AppEnv,
 		HealthHandler:      healthHandler,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
+		EnableAdmin:        cfg.EnableAdmin,
 	})
 
 	// 4. Configure HTTP Server
@@ -51,6 +53,9 @@ func main() {
 	// 5. Start Server in a separate goroutine
 	go func() {
 		log.Printf("🚀 Ticket Box Backend running on http://localhost:%s (Env: %s)", cfg.Port, cfg.AppEnv)
+		if cfg.EnableAdmin {
+			log.Printf("🛠️  GoAdmin Panel available at http://localhost:%s/admin", cfg.Port)
+		}
 		if cfg.AppEnv != "production" {
 			log.Printf("📖 Swagger UI available at http://localhost:%s/swagger/index.html", cfg.Port)
 		}

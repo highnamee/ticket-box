@@ -15,6 +15,9 @@ apps/be/
 │       └── main.go                 # Database auto-migration CLI
 ├── docs/                           # Auto-generated OpenAPI / Swagger specs (docs.go, swagger.json, swagger.yaml)
 ├── internal/                       # Private application code (Go compiler protected)
+│   ├── admin/                      # GoAdmin web panel setup & model table generators
+│   │   ├── admin.go
+│   │   └── tables.go
 │   ├── config/                     # Configuration and environment variable loader
 │   │   ├── config.go
 │   │   └── config_test.go
@@ -128,6 +131,12 @@ make lint
 ---
 
 ## 📡 API Endpoints & Documentation
+
+### GoAdmin Management Panel (Web UI)
+
+- **URL**: `http://localhost:8080/admin`
+- **Default Credentials**: Username: `admin` / Password: `admin`
+- **Description**: Full-featured database & entity management dashboard (AdminLTE theme) for managing Tickets, inventory, roles, permissions, and audit logs.
 
 ### Swagger OpenAPI Documentation (Web UI)
 

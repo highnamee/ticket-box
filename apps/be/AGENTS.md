@@ -83,6 +83,15 @@ Follow the established layered pattern strictly:
 
 ---
 
+## 🛠️ Admin Panel (`internal/admin/`)
+
+- GoAdmin web interface is mounted at `/admin` (accessible with `admin` / `admin`).
+- To add a new entity to the Admin panel:
+  1. Define a `Get<Entity>Table(ctx *context.Context) table.Table` generator in `internal/admin/tables.go`.
+  2. Register the table generator in the `Generators` map in `internal/admin/admin.go`.
+
+---
+
 ## ⚡ Useful Commands
 
 ```bash

@@ -12,10 +12,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
-	var dsn string
+// BuildDSN constructs the PostgreSQL connection string
+func BuildDSN(cfg *config.Config) string {
 	if cfg.DB.Password != "" {
-		dsn = fmt.Sprintf(
+		return fmt.Sprintf(
 			"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 			cfg.DB.Host,
 			cfg.DB.Port,
@@ -24,16 +24,19 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 			cfg.DB.DBName,
 			cfg.DB.SSLMode,
 		)
-	} else {
-		dsn = fmt.Sprintf(
-			"host=%s port=%d user=%s dbname=%s sslmode=%s",
-			cfg.DB.Host,
-			cfg.DB.Port,
-			cfg.DB.User,
-			cfg.DB.DBName,
-			cfg.DB.SSLMode,
-		)
 	}
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s dbname=%s sslmode=%s",
+		cfg.DB.Host,
+		cfg.DB.Port,
+		cfg.DB.User,
+		cfg.DB.DBName,
+		cfg.DB.SSLMode,
+	)
+}
+
+func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
+	dsn := BuildDSN(cfg)
 
 	var logLevel logger.LogLevel
 	switch cfg.AppEnv {

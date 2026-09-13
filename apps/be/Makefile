@@ -1,4 +1,4 @@
-.PHONY: help setup run build test test-coverage lint fmt vet tidy clean migrate swagger
+.PHONY: help setup run build test test-coverage lint fmt vet tidy clean migrate swagger admin-generate
 
 # Default binary name
 BIN_DIR = bin
@@ -8,11 +8,12 @@ help: ## Display available commands
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-setup: ## Install required development tools (swag, golangci-lint) and dependencies
+setup: ## Install required development tools (adm, swag, golangci-lint) and dependencies
 	@echo "📦 Downloading Go dependencies..."
 	go mod download
-	@echo "🛠️ Installing developer CLI tools..."
+	@echo "🛠️ Installing developer CLI tools (adm, swag, golangci-lint)..."
 	@export PATH=$$PATH:$$(go env GOPATH)/bin; \
+	go install github.com/GoAdminGroup/adm@latest; \
 	go install github.com/swaggo/swag/cmd/swag@v1.16.4; \
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 	@echo "📖 Generating initial Swagger documentation..."
@@ -24,6 +25,11 @@ run: ## Run application locally
 
 migrate: ## Run database migrations
 	go run ./cmd/migrate/main.go
+
+admin-generate: ## Generate GoAdmin table files from database using official adm CLI
+	@export PATH=$$PATH:$$(go env GOPATH)/bin; \
+	which adm > /dev/null || (echo "Installing adm CLI..." && go install github.com/GoAdminGroup/adm@latest); \
+	adm generate
 
 swagger: ## Generate OpenAPI / Swagger documentation
 	@export PATH=$$PATH:$$(go env GOPATH)/bin; \

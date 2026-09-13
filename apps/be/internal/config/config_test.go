@@ -18,6 +18,7 @@ func TestLoad_DefaultValues(t *testing.T) {
 
 	assert.Equal(t, "8080", cfg.Port)
 	assert.Equal(t, "development", cfg.AppEnv)
+	assert.True(t, cfg.EnableAdmin)
 	assert.Equal(t, 5432, cfg.DB.Port)
 	assert.Equal(t, "localhost", cfg.DB.Host)
 	assert.Equal(t, "ticketbox_db", cfg.DB.DBName)
@@ -27,6 +28,7 @@ func TestLoad_DefaultValues(t *testing.T) {
 func TestLoad_CustomEnvValues(t *testing.T) {
 	t.Setenv("PORT", "9090")
 	t.Setenv("APP_ENV", "production")
+	t.Setenv("ENABLE_ADMIN", "false")
 	t.Setenv("DB_HOST", "db.internal")
 	t.Setenv("DB_PORT", "5433")
 	t.Setenv("DB_NAME", "production_db")
@@ -36,6 +38,7 @@ func TestLoad_CustomEnvValues(t *testing.T) {
 
 	assert.Equal(t, "9090", cfg.Port)
 	assert.Equal(t, "production", cfg.AppEnv)
+	assert.False(t, cfg.EnableAdmin)
 	assert.Equal(t, "db.internal", cfg.DB.Host)
 	assert.Equal(t, 5433, cfg.DB.Port)
 	assert.Equal(t, "production_db", cfg.DB.DBName)

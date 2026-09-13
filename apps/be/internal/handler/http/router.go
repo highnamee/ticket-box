@@ -1,7 +1,11 @@
 package http
 
 import (
+	"log"
+
 	_ "ticket-box-be/docs"
+	"ticket-box-be/internal/admin"
+	"ticket-box-be/internal/config"
 	"ticket-box-be/internal/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -10,9 +14,11 @@ import (
 )
 
 type RouterConfig struct {
+	AppConfig          *config.Config
 	AppEnv             string
 	HealthHandler      *HealthHandler
 	CORSAllowedOrigins []string
+	EnableAdmin        bool
 }
 
 func NewRouter(cfg RouterConfig) *gin.Engine {
@@ -31,6 +37,13 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(gin.Logger())
 	r.Use(middleware.CORSMiddleware(cfg.CORSAllowedOrigins))
+
+	// Mount GoAdmin Admin Panel
+	if cfg.AppConfig != nil && cfg.EnableAdmin {
+		if err := admin.Mount(r, cfg.AppConfig); err != nil {
+			log.Printf("⚠️ Warning: Failed to mount GoAdmin engine: %v", err)
+		}
+	}
 
 	// Swagger Documentation UI (disabled in production)
 	if cfg.AppEnv != "production" {
