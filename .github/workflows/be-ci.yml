@@ -1,0 +1,71 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'apps/be/**'
+      - '.github/workflows/be-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'apps/be/**'
+      - '.github/workflows/be-ci.yml'
+
+jobs:
+  lint:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/be
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          check-latest: true
+          cache-dependency-path: apps/be/go.sum
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: apps/be
+          args: --timeout=5m
+
+  test:
+    name: Test & Build Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/be
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          check-latest: true
+          cache-dependency-path: apps/be/go.sum
+
+      - name: Verify Dependencies
+        run: go mod verify
+
+      - name: Run Vet Analysis
+        run: go vet ./...
+
+      - name: Run Unit Tests
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Build Binary
+        run: go build -v -o bin/api ./cmd/api/main.go
