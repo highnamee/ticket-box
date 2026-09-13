@@ -18,11 +18,11 @@ build: ## Build binary executable
 	@mkdir -p $(BIN_DIR)
 	go build -o $(BIN_DIR)/$(BIN_NAME) ./cmd/api/main.go
 
-test: ## Run unit tests with race detection
-	go test -v -race ./...
+test: ## Run unit and integration tests with race detection
+	go test -v -race ./internal/...
 
 test-coverage: ## Run tests with code coverage report
-	go test -race -coverprofile=coverage.out -covermode=atomic ./...
+	go test -race -coverprofile=coverage.out ./internal/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated at coverage.html"
 
