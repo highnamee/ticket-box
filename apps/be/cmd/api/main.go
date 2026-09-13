@@ -24,7 +24,8 @@ func main() {
 
 	// 3. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
-		HealthHandler: healthHandler,
+		HealthHandler:      healthHandler,
+		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
 	})
 
 	// 4. Configure HTTP Server

@@ -7,7 +7,8 @@ import (
 )
 
 type RouterConfig struct {
-	HealthHandler *HealthHandler
+	HealthHandler      *HealthHandler
+	CORSAllowedOrigins []string
 }
 
 func NewRouter(cfg RouterConfig) *gin.Engine {
@@ -16,7 +17,7 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	// Global Middlewares
 	r.Use(gin.Recovery())
 	r.Use(gin.Logger())
-	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.CORSMiddleware(cfg.CORSAllowedOrigins))
 
 	// Health Check Route
 	r.GET("/health", cfg.HealthHandler.Check)
