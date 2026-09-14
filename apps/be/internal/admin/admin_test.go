@@ -22,7 +22,7 @@ func TestGoAdmin_Routes(t *testing.T) {
 	}
 
 	cfg := testutil.GetTestConfig(t)
-	err := Mount(r, cfg)
+	err := Mount(r, cfg, db)
 	assert.NoError(t, err)
 
 	for _, route := range r.Routes() {

@@ -12,6 +12,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const (
+	maxIdleConns    = 10
+	maxOpenConns    = 100
+	connMaxLifetime = time.Hour
+)
+
 // BuildDSN constructs the PostgreSQL connection string
 func BuildDSN(cfg *config.Config) string {
 	if cfg.DB.Password != "" {
@@ -37,12 +43,13 @@ func BuildDSN(cfg *config.Config) string {
 
 func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	dsn := BuildDSN(cfg)
+	appEnv := config.Environment(cfg.AppEnv)
 
 	var logLevel logger.LogLevel
-	switch cfg.AppEnv {
-	case "test":
+	switch appEnv {
+	case config.EnvTest:
 		logLevel = logger.Silent
-	case "production":
+	case config.EnvProduction:
 		logLevel = logger.Warn
 	default:
 		logLevel = logger.Info
@@ -61,16 +68,16 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// Connection pool settings
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetMaxIdleConns(maxIdleConns)
+	sqlDB.SetMaxOpenConns(maxOpenConns)
+	sqlDB.SetConnMaxLifetime(connMaxLifetime)
 
 	// Verify database is active and reachable
 	if err := sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	if cfg.AppEnv != "test" {
+	if !cfg.IsTest() {
 		slog.Info("Database connected successfully", "host", cfg.DB.Host, "dbname", cfg.DB.DBName)
 	}
 
@@ -88,4 +95,3 @@ func Close(db *gorm.DB) error {
 	}
 	return sqlDB.Close()
 }
-

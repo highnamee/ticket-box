@@ -3,6 +3,7 @@ package admin
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	_ "github.com/GoAdminGroup/go-admin/adapter/gin"
 	adminCfg "github.com/GoAdminGroup/go-admin/modules/config"
@@ -12,10 +13,18 @@ import (
 	admTable "github.com/GoAdminGroup/go-admin/plugins/admin/modules/table"
 	_ "github.com/GoAdminGroup/themes/adminlte"
 
-	"github.com/GoAdminGroup/go-admin/engine"
-	"github.com/gin-gonic/gin"
 	"ticket-box-be/internal/config"
 	"ticket-box-be/internal/pkg/database"
+
+	"github.com/GoAdminGroup/go-admin/engine"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+const (
+	adminMaxIdleConns    = 5
+	adminMaxOpenConns    = 20
+	adminConnMaxLifetime = time.Hour
 )
 
 // Generators maps table names to their GoAdmin table generators
@@ -24,16 +33,14 @@ var Generators = admTable.GeneratorList{
 }
 
 // Mount initializes and attaches the GoAdmin engine to the Gin router
-func Mount(r *gin.Engine, appCfg *config.Config) error {
+func Mount(r *gin.Engine, appCfg *config.Config, db *gorm.DB) error {
 	eng := engine.Default()
 
-	// 1. Ensure GoAdmin schema and initial admin account exist in PostgreSQL using shared database package
-	db, err := database.NewDatabase(appCfg)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database for GoAdmin: %w", err)
-	}
-	if err := InitSchema(db, appCfg); err != nil {
-		return fmt.Errorf("failed to initialize GoAdmin database schema: %w", err)
+	// 1. Ensure GoAdmin schema and initial admin account exist in PostgreSQL using shared database connection
+	if db != nil {
+		if err := InitSchema(db, appCfg); err != nil {
+			return fmt.Errorf("failed to initialize GoAdmin database schema: %w", err)
+		}
 	}
 
 	dsn := database.BuildDSN(appCfg)
@@ -41,8 +48,11 @@ func Mount(r *gin.Engine, appCfg *config.Config) error {
 	cfg := adminCfg.Config{
 		Databases: adminCfg.DatabaseList{
 			"default": {
-				Dsn:    dsn,
-				Driver: adminCfg.DriverPostgresql,
+				Dsn:             dsn,
+				Driver:          adminCfg.DriverPostgresql,
+				MaxIdleConns:    adminMaxIdleConns,
+				MaxOpenConns:    adminMaxOpenConns,
+				ConnMaxLifetime: adminConnMaxLifetime,
 			},
 		},
 		UrlPrefix: "admin",

@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 )
 
 type RouterConfig struct {
@@ -21,6 +22,7 @@ type RouterConfig struct {
 	TicketHandler      *TicketHandler
 	CORSAllowedOrigins []string
 	EnableAdmin        bool
+	DB                 *gorm.DB
 }
 
 func NewRouter(cfg RouterConfig) *gin.Engine {
@@ -46,7 +48,7 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 
 	// Mount GoAdmin Admin Panel
 	if cfg.AppConfig != nil && cfg.EnableAdmin {
-		if err := admin.Mount(r, cfg.AppConfig); err != nil {
+		if err := admin.Mount(r, cfg.AppConfig, cfg.DB); err != nil {
 			slog.Warn("Failed to mount GoAdmin engine", "error", err)
 		}
 	}

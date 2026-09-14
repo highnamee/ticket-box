@@ -61,6 +61,7 @@ func main() {
 		TicketHandler:      ticketHandler,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
 		EnableAdmin:        cfg.EnableAdmin,
+		DB:                 db,
 	})
 
 	// 8. Configure HTTP Server
