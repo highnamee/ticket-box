@@ -56,13 +56,16 @@ Follow the established layered pattern strictly:
 
 3. **Service Layer (`internal/service/`)**:
    - Implements business use cases and orchestrates repository calls.
+   - Receives repository interfaces via constructor injection (`New<Feature>Service(repo domain.<Feature>Repository)`).
 
 4. **Handler Layer (`internal/handler/http/`)**:
    - Handles HTTP request binding, validation, controller flow, and response formatting.
+   - Receives service interfaces via constructor injection (`New<Feature>Handler(service domain.<Feature>Service)`). Never instantiate services directly inside handlers or repositories directly inside services.
+   - **Composition Root**: `cmd/api/main.go` acts as the single composition root where DB -> Repositories -> Services -> Handlers -> Router are wired together.
    - **File Convention**: Separate handler logic from request/response DTOs:
-     - `<feature>_handler.go`: Controller methods, routing, service/repo calls, and HTTP responses.
+     - `<feature>_handler.go`: Controller methods, routing, service calls, and HTTP responses.
      - `<feature>_dto.go`: Request queries/bodies with Gin binding tags (`form:`, `json:`), Response Serializers/DTOs, and mapping functions.
-     - `<feature>_handler_test.go`: Unit tests for endpoints and serialization.
+     - `<feature>_handler_test.go`: Unit tests for endpoints and serialization (mocking `domain.<Feature>Service`).
    - Returns standardized API responses via `internal/pkg/response`:
      - Regular endpoints: `response.Success(c, http.StatusOK, "message", data)`
      - Paginated endpoints: `response.SuccessWithPagination(c, http.StatusOK, "message", items, paginationMeta)` (wraps `{ items, pagination }` inside `data`)

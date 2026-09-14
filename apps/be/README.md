@@ -10,40 +10,54 @@ Go backend for the **Ticket Box** system, built with [Gin Web Framework](https:/
 apps/be/
 ├── cmd/
 │   ├── api/
-│   │   └── main.go                 # Application entry point (dependency injection, graceful shutdown)
+│   │   └── main.go                 # Application entry point (Composition Root, DI wiring, graceful shutdown)
 │   └── migrate/
 │       └── main.go                 # Database auto-migration CLI
 ├── docs/                           # Auto-generated OpenAPI / Swagger specs (docs.go, swagger.json, swagger.yaml)
 ├── internal/                       # Private application code (Go compiler protected)
 │   ├── admin/                      # GoAdmin web panel setup & model table generators
 │   │   ├── admin.go
+│   │   ├── admin_test.go
+│   │   ├── schema.go
+│   │   ├── schema.sql
 │   │   └── tables.go
-│   ├── config/                     # Configuration and environment variable loader
+│   ├── config/                     # Type-safe configuration loader (caarlos0/env)
 │   │   ├── config.go
 │   │   └── config_test.go
-│   ├── domain/                     # Core domain entities, errors, and interface definitions
+│   ├── domain/                     # Core domain entities, errors, and interface contracts
 │   │   ├── errors.go
 │   │   ├── ticket.go
 │   │   └── ticket_test.go
-│   ├── handler/                    # Transport layer (HTTP / Gin handlers)
+│   ├── handler/                    # Transport layer (HTTP / Gin controllers)
 │   │   └── http/
 │   │       ├── health_handler.go
 │   │       ├── health_handler_test.go
 │   │       ├── router.go
-│   │       └── router_test.go
-│   ├── middleware/                 # Gin HTTP middlewares (CORS, Logger, Recovery)
+│   │       ├── router_test.go
+│   │       ├── ticket_dto.go
+│   │       ├── ticket_handler.go
+│   │       └── ticket_handler_test.go
+│   ├── middleware/                 # Gin HTTP middlewares (CORS, Request ID, Slog Logger, Recovery)
 │   │   ├── cors.go
-│   │   └── cors_test.go
-│   ├── pkg/                        # Internal shared libraries and helpers
-│   │   ├── database/               # Database connection and AutoMigrate runner
-│   │   ├── response/               # Standardized JSON response envelope
-│   │   └── testutil/               # Test isolation DB helpers (transaction rollback)
+│   │   ├── cors_test.go
+│   │   ├── logger.go
+│   │   ├── logger_test.go
+│   │   ├── request_id.go
+│   │   └── request_id_test.go
+│   ├── pkg/                        # Shared libraries and packages
+│   │   ├── database/               # Database connection, pool config, migration, and teardown
+│   │   ├── logger/                 # Structured logging with Go log/slog and context tracing
+│   │   ├── response/               # Standardized JSON response envelope & pagination
+│   │   ├── testutil/               # Test isolation DB helpers (transaction rollback)
+│   │   └── validator/              # Custom validation tags for Gin (uuidv7, notblank)
 │   ├── repository/                 # Data access layer (PostgreSQL GORM implementations)
 │   │   └── postgres/
 │   │       ├── ticket_repo.go
 │   │       └── ticket_repo_test.go
 │   └── service/                    # Business logic and use-cases layer
-├── .env.example                # Sample environment variables
+│       ├── ticket_service.go
+│       └── ticket_service_test.go
+├── .env.example                    # Sample environment variables
 ├── .golangci.yml                   # Linter configuration (golangci-lint)
 ├── Makefile                        # Common developer task automation
 ├── go.mod                          # Go module definitions
