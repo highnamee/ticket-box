@@ -60,13 +60,45 @@ apps/be/
 ├── migrations/                     # SQL Goose Versioned Migration files (*.sql)
 │   ├── 00001_create_tickets_table.sql
 │   └── migrations.go               # EmbedFS wrapper for compiled binaries
+├── .dockerignore                   # Docker build ignore rules
 ├── .env.example                    # Sample environment variables
 ├── .golangci.yml                   # Linter configuration (golangci-lint)
+├── Dockerfile                      # Multi-stage production container build
 ├── Makefile                        # Common developer task automation
 ├── go.mod                          # Go module definitions
 ├── go.sum                          # Go module checksums
 └── README.md
 ```
+
+---
+
+## 🐳 Docker & Docker Compose
+
+### 1. Full Stack with Docker Compose (PostgreSQL + Backend)
+From root or via Makefile:
+```bash
+# Start both PostgreSQL and Backend
+make compose-up
+
+# Start ONLY PostgreSQL (for local Go development)
+make db-up
+
+# Stop all containers
+make compose-down
+```
+
+### 2. Standalone Docker Image
+```bash
+# Build Docker image
+make docker-build
+
+# Run Backend container standalone
+make docker-run
+
+# Run database migrations via container
+docker run --rm --env-file .env --entrypoint /app/migrate ticket-box-be:latest up
+```
+
 
 ---
 

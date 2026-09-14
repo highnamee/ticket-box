@@ -1,0 +1,47 @@
+services:
+  # ==========================================
+  # PostgreSQL Database Service
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: ticket-box-postgres
+    restart: unless-stopped
+    env_file:
+      - ./apps/be/.env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$DB_USER -d $$DB_NAME"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ==========================================
+  # Backend API Service (Go + Gin)
+  # ==========================================
+  backend:
+    build:
+      context: ./apps/be
+      dockerfile: Dockerfile
+    container_name: ticket-box-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./apps/be/.env
+    ports:
+      - "${PORT}:8080"
+    environment:
+      DB_HOST: postgres
+
+volumes:
+  postgres_data:
+    driver: local

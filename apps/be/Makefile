@@ -74,3 +74,18 @@ tidy: ## Clean up and download Go module dependencies
 
 clean: ## Clean build artifacts and coverage files
 	rm -rf $(BIN_DIR) coverage.out coverage.html
+
+docker-build: ## Build Docker container image
+	docker build -t ticket-box-be:latest .
+
+docker-run: ## Run Docker container locally
+	docker run --rm -p 8080:8080 --env-file .env ticket-box-be:latest
+
+db-up: ## Start PostgreSQL database in Docker in background
+	docker compose -f ../../docker-compose.yml --env-file .env up -d postgres
+
+compose-up: ## Start PostgreSQL and Backend services via Docker Compose
+	docker compose -f ../../docker-compose.yml --env-file .env up --build -d
+
+compose-down: ## Stop all Docker Compose services and remove containers
+	docker compose -f ../../docker-compose.yml --env-file .env down

@@ -1,0 +1,30 @@
+# Git & VCS
+.git
+.gitignore
+
+# Local Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Build outputs & binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts & coverage
+coverage.out
+coverage.html
+
+# IDE & OS files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*~
+
+# CI & Linter configs
+.golangci.yml
