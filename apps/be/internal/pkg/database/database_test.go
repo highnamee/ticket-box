@@ -48,3 +48,25 @@ func TestDatabase_NewDatabase_Success(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, db)
 }
+
+func TestDatabase_Close(t *testing.T) {
+	t.Run("nil database returns nil", func(t *testing.T) {
+		err := database.Close(nil)
+		assert.NoError(t, err)
+	})
+
+	t.Run("valid database closes connection", func(t *testing.T) {
+		cfg := testutil.GetTestConfig(t)
+		db, err := database.NewDatabase(cfg)
+		require.NoError(t, err)
+		require.NotNil(t, db)
+
+		err = database.Close(db)
+		assert.NoError(t, err)
+
+		// Subsequent operations should fail because connection pool is closed
+		sqlDB, err := db.DB()
+		require.NoError(t, err)
+		assert.Error(t, sqlDB.Ping())
+	})
+}

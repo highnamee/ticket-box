@@ -76,3 +76,16 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 
 	return db, nil
 }
+
+// Close safely closes the underlying sql.DB connection pool
+func Close(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+	return sqlDB.Close()
+}
+

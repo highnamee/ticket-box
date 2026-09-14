@@ -106,5 +106,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// 11. Close Database Connection Pool
+	slog.Info("Closing database connection pool...")
+	if err := database.Close(db); err != nil {
+		slog.Error("Failed to close database connection pool", "error", err)
+	} else {
+		slog.Info("Database connection pool closed successfully")
+	}
+
 	slog.Info("Server exited cleanly.")
 }
