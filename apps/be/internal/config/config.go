@@ -1,10 +1,11 @@
 package config
 
 import (
+	"log/slog"
 	"os"
-	"strconv"
 	"strings"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
@@ -19,9 +20,9 @@ const (
 )
 
 type Config struct {
-	AppEnv      string
-	Port        string
-	EnableAdmin bool
+	AppEnv      string         `env:"APP_ENV" envDefault:"development"`
+	Port        string         `env:"PORT" envDefault:"8080"`
+	EnableAdmin bool           `env:"ENABLE_ADMIN" envDefault:"true"`
 	Admin       AdminConfig
 	DB          DatabaseConfig
 	CORS        CORSConfig
@@ -48,76 +49,47 @@ func (c *Config) IsTest() bool {
 }
 
 type AdminConfig struct {
-	Username string
-	Password string
+	Username string `env:"ADMIN_USERNAME" envDefault:"admin"`
+	Password string `env:"ADMIN_PASSWORD" envDefault:"admin"`
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
+	Host     string `env:"DB_HOST" envDefault:"localhost"`
+	Port     int    `env:"DB_PORT" envDefault:"5432"`
+	User     string `env:"DB_USER" envDefault:"postgres"`
+	Password string `env:"DB_PASSWORD" envDefault:""`
+	DBName   string `env:"DB_NAME" envDefault:"ticketbox_db"`
+	SSLMode  string `env:"DB_SSLMODE" envDefault:"disable"`
 }
 
 type CORSConfig struct {
-	AllowedOrigins []string
+	AllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:","`
 }
 
 func Load() *Config {
 	_ = godotenv.Load(".env", "apps/be/.env")
 
-	port := getEnv("PORT", "8080")
-	appEnv := getEnv("APP_ENV", string(EnvDevelopment))
-
-	defaultEnableAdmin := "true"
-	if appEnv == string(EnvProduction) {
-		defaultEnableAdmin = "false"
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		slog.Error("Failed to parse application configuration", "error", err)
+		os.Exit(1)
 	}
-	enableAdmin, _ := strconv.ParseBool(getEnv("ENABLE_ADMIN", defaultEnableAdmin))
 
-	adminUser := getEnv("ADMIN_USERNAME", "admin")
-	adminPass := getEnv("ADMIN_PASSWORD", "admin")
-
-	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
-
-	corsOriginsStr := getEnv("CORS_ALLOWED_ORIGINS", "")
-	var allowedOrigins []string
-	if corsOriginsStr != "" {
-		for _, o := range strings.Split(corsOriginsStr, ",") {
-			trimmed := strings.TrimSpace(o)
-			if trimmed != "" {
-				allowedOrigins = append(allowedOrigins, trimmed)
-			}
+	// Trim whitespace from CORS allowed origins
+	var trimmedOrigins []string
+	for _, origin := range cfg.CORS.AllowedOrigins {
+		trimmed := strings.TrimSpace(origin)
+		if trimmed != "" {
+			trimmedOrigins = append(trimmedOrigins, trimmed)
 		}
 	}
+	cfg.CORS.AllowedOrigins = trimmedOrigins
 
-	return &Config{
-		AppEnv:      appEnv,
-		Port:        port,
-		EnableAdmin: enableAdmin,
-		Admin: AdminConfig{
-			Username: adminUser,
-			Password: adminPass,
-		},
-		DB: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     dbPort,
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "ticketbox_db"),
-			SSLMode:  getEnv("DB_SSLMODE", "disable"),
-		},
-		CORS: CORSConfig{
-			AllowedOrigins: allowedOrigins,
-		},
+	// In production, default EnableAdmin to false unless explicitly configured
+	if cfg.AppEnv == string(EnvProduction) && os.Getenv("ENABLE_ADMIN") == "" {
+		cfg.EnableAdmin = false
 	}
+
+	return &cfg
 }
 
-func getEnv(key, defaultVal string) string {
-	if val, exists := os.LookupEnv(key); exists && val != "" {
-		return val
-	}
-	return defaultVal
-}

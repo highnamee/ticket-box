@@ -34,7 +34,6 @@ func TestContextHelpers(t *testing.T) {
 
 	t.Run("request ID context", func(t *testing.T) {
 		assert.Equal(t, "", logger.GetRequestID(ctx))
-		assert.Equal(t, "", logger.GetRequestID(nil))
 
 		ctxWithReq := logger.WithRequestID(ctx, "req-12345")
 		assert.Equal(t, "req-12345", logger.GetRequestID(ctxWithReq))

@@ -29,7 +29,8 @@ func (m *MockTicketRepository) FindByID(ctx context.Context, id uuid.UUID) (*dom
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.Ticket), args.Error(1)
+	ticket, _ := args.Get(0).(*domain.Ticket)
+	return ticket, args.Error(1)
 }
 
 func (m *MockTicketRepository) FindAll(ctx context.Context) ([]domain.Ticket, error) {
@@ -37,15 +38,19 @@ func (m *MockTicketRepository) FindAll(ctx context.Context) ([]domain.Ticket, er
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]domain.Ticket), args.Error(1)
+	tickets, _ := args.Get(0).([]domain.Ticket)
+	return tickets, args.Error(1)
 }
 
 func (m *MockTicketRepository) FindPublic(ctx context.Context, page, limit int) ([]domain.Ticket, int64, error) {
 	args := m.Called(ctx, page, limit)
 	if args.Get(0) == nil {
-		return nil, args.Get(1).(int64), args.Error(2)
+		total, _ := args.Get(1).(int64)
+		return nil, total, args.Error(2)
 	}
-	return args.Get(0).([]domain.Ticket), args.Get(1).(int64), args.Error(2)
+	tickets, _ := args.Get(0).([]domain.Ticket)
+	total, _ := args.Get(1).(int64)
+	return tickets, total, args.Error(2)
 }
 
 func (m *MockTicketRepository) Update(ctx context.Context, ticket *domain.Ticket) error {

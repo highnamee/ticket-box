@@ -7,6 +7,7 @@ import (
 	"ticket-box-be/internal/admin"
 	"ticket-box-be/internal/config"
 	"ticket-box-be/internal/middleware"
+	"ticket-box-be/internal/pkg/validator"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -23,6 +24,9 @@ type RouterConfig struct {
 }
 
 func NewRouter(cfg RouterConfig) *gin.Engine {
+	// Register custom validation rules for Gin
+	validator.RegisterCustomValidators()
+
 	switch cfg.AppEnv {
 	case string(config.EnvProduction):
 		gin.SetMode(gin.ReleaseMode)

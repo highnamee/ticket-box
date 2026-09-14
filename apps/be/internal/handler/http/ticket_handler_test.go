@@ -27,10 +27,12 @@ type MockTicketService struct {
 func (m *MockTicketService) GetPublicTickets(ctx context.Context, page, limit int) ([]domain.Ticket, int64, error) {
 	args := m.Called(ctx, page, limit)
 	if args.Get(0) == nil {
-		return nil, args.Get(1).(int64), args.Error(2)
+		total, _ := args.Get(1).(int64)
+		return nil, total, args.Error(2)
 	}
 	tickets, _ := args.Get(0).([]domain.Ticket)
-	return tickets, args.Get(1).(int64), args.Error(2)
+	total, _ := args.Get(1).(int64)
+	return tickets, total, args.Error(2)
 }
 
 func (m *MockTicketService) GetTicketByID(ctx context.Context, id uuid.UUID) (*domain.Ticket, error) {
