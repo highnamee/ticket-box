@@ -1,6 +1,7 @@
 package response
 
 import (
+	"log/slog"
 	"math"
 	"net/http"
 
@@ -94,5 +95,17 @@ func InternalServerError(c *gin.Context, message string, err interface{}) {
 	if message == "" {
 		message = "Internal server error"
 	}
-	Error(c, http.StatusInternalServerError, message, err)
+	if err != nil {
+		path := ""
+		if c.Request != nil && c.Request.URL != nil {
+			path = c.Request.URL.Path
+		}
+		slog.Error("Internal server error", "error", err, "path", path)
+	}
+	// For 500 errors, hide internal details from public clients to prevent information disclosure
+	c.JSON(http.StatusInternalServerError, APIResponse{
+		Success: false,
+		Message: message,
+		Error:   nil,
+	})
 }

@@ -242,6 +242,6 @@ func TestTicketHandler_GetPublicTickets_Error(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, res.Success)
 	assert.Equal(t, "Failed to retrieve tickets", res.Message)
-	assert.Equal(t, "database failure", res.Error)
+	assert.Nil(t, res.Error)
 	mockService.AssertExpectations(t)
 }

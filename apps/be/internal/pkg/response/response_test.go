@@ -115,5 +115,5 @@ func TestInternalServerErrorResponse(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, res.Success)
 	assert.Equal(t, "Internal server error", res.Message)
-	assert.Equal(t, "unexpected error", res.Error)
+	assert.Nil(t, res.Error)
 }

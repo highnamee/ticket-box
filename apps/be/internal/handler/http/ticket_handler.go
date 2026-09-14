@@ -37,7 +37,7 @@ func (h *TicketHandler) GetPublicTickets(c *gin.Context) {
 
 	tickets, total, err := h.ticketService.GetPublicTickets(c.Request.Context(), query.Page, query.Limit)
 	if err != nil {
-		response.InternalServerError(c, "Failed to retrieve tickets", err.Error())
+		response.InternalServerError(c, "Failed to retrieve tickets", err)
 		return
 	}
 
