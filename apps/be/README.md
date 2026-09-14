@@ -12,7 +12,7 @@ apps/be/
 │   ├── api/
 │   │   └── main.go                 # Application entry point (Composition Root, DI wiring, graceful shutdown)
 │   └── migrate/
-│       └── main.go                 # Database auto-migration CLI
+│       └── main.go                 # Goose Versioned Database Migration CLI (up, down, status, reset)
 ├── docs/                           # Auto-generated OpenAPI / Swagger specs (docs.go, swagger.json, swagger.yaml)
 ├── internal/                       # Private application code (Go compiler protected)
 │   ├── admin/                      # GoAdmin web panel setup & model table generators
@@ -45,7 +45,7 @@ apps/be/
 │   │   ├── request_id.go
 │   │   └── request_id_test.go
 │   ├── pkg/                        # Shared libraries and packages
-│   │   ├── database/               # Database connection, pool config, migration, and teardown
+│   │   ├── database/               # Database connection, Goose migration runner, and teardown
 │   │   ├── logger/                 # Structured logging with Go log/slog and context tracing
 │   │   ├── response/               # Standardized JSON response envelope & pagination
 │   │   ├── testutil/               # Test isolation DB helpers (transaction rollback)
@@ -57,6 +57,9 @@ apps/be/
 │   └── service/                    # Business logic and use-cases layer
 │       ├── ticket_service.go
 │       └── ticket_service_test.go
+├── migrations/                     # SQL Goose Versioned Migration files (*.sql)
+│   ├── 00001_create_tickets_table.sql
+│   └── migrations.go               # EmbedFS wrapper for compiled binaries
 ├── .env.example                    # Sample environment variables
 ├── .golangci.yml                   # Linter configuration (golangci-lint)
 ├── Makefile                        # Common developer task automation
@@ -91,6 +94,11 @@ apps/be/
    cp .env.example .env
    ```
 
+4. Run database migrations:
+   ```bash
+   make migrate
+   ```
+
 ---
 
 ## 🛠️ Development & Commands
@@ -102,7 +110,10 @@ The project includes a `Makefile` with common tasks:
 | `make setup`         | Installs developer tools (`swag`, `golangci-lint`) and dependencies  |
 | `make run`           | Starts the API server locally                                        |
 | `make build`         | Compiles the binary to `bin/api`                                     |
-| `make migrate`       | Runs database migrations (`cmd/migrate`)                             |
+| `make migrate`       | Runs pending Goose database migrations (`Up`)                        |
+| `make migrate-down`  | Rolls back the most recent Goose database migration (`Down`)         |
+| `make migrate-status`| Checks current status of all Goose migrations                        |
+| `make migrate-create`| Creates a new migration file (`make migrate-create name=name`)       |
 | `make swagger`       | Generates OpenAPI / Swagger docs into `docs/` using `swag`           |
 | `make test`          | Runs unit and integration tests with race condition detection        |
 | `make test-coverage` | Runs unit tests and generates HTML coverage report                   |

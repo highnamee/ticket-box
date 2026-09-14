@@ -74,10 +74,24 @@ Follow the established layered pattern strictly:
 
 ---
 
-## 🗄️ Database & Migrations
+## 🗄️ Database & Versioned Migrations (Goose)
 
-- All database models must be registered in `internal/pkg/database/migration.go` inside the `models` slice in `AutoMigrate(db)`.
-- Migrations are run via CLI entrypoint: `cmd/migrate/main.go` or `make migrate`.
+- All schema changes must be versioned as SQL migration files in `apps/be/migrations/` using **Goose (`pressly/goose/v3`)**.
+- File naming convention: `<0000X>_<migration_name>.sql` (e.g. `00001_create_tickets_table.sql`).
+- Format: Must include `-- +goose Up` and `-- +goose Down` blocks:
+  ```sql
+  -- +goose Up
+  -- +goose StatementBegin
+  CREATE TABLE ...;
+  -- +goose StatementEnd
+
+  -- +goose Down
+  -- +goose StatementBegin
+  DROP TABLE ...;
+  -- +goose StatementEnd
+  ```
+- Migrations are run via CLI entrypoint: `cmd/migrate/main.go` or `make migrate`, `make migrate-down`, `make migrate-status`, `make migrate-create name=<migration_name>`.
+- Tests automatically apply Goose migrations before running integration tests via `testutil.SetupTestDB(t)`.
 
 ---
 

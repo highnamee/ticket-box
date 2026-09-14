@@ -23,8 +23,18 @@ setup: ## Install required development tools (adm, swag, golangci-lint) and depe
 run: ## Run application locally
 	go run ./cmd/api/main.go
 
-migrate: ## Run database migrations
-	go run ./cmd/migrate/main.go
+migrate: ## Run database migrations (Up)
+	go run ./cmd/migrate/main.go up
+
+migrate-down: ## Rollback the most recent database migration (Down)
+	go run ./cmd/migrate/main.go down
+
+migrate-status: ## Show database migration status
+	go run ./cmd/migrate/main.go status
+
+migrate-create: ## Create a new migration file (Usage: make migrate-create name=migration_name)
+	@if [ -z "$(name)" ]; then echo "Error: 'name' parameter is required. Usage: make migrate-create name=add_orders_table"; exit 1; fi
+	go run ./cmd/migrate/main.go create $(name)
 
 admin-generate: ## Generate GoAdmin table files from database using official adm CLI
 	@export PATH=$$PATH:$$(go env GOPATH)/bin; \

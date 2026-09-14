@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"ticket-box-be/internal/config"
-	"ticket-box-be/internal/domain"
 	"ticket-box-be/internal/pkg/database"
 
 	"github.com/joho/godotenv"
@@ -84,8 +83,8 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		return nil
 	}
 
-	// Ensure schema exists
-	if err := db.AutoMigrate(&domain.Ticket{}); err != nil {
+	// Ensure schema exists via Goose versioned migrations
+	if err := database.MigrateUp(db); err != nil {
 		t.Fatalf("Failed to migrate test schema: %v", err)
 	}
 
