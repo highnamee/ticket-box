@@ -49,7 +49,7 @@ apps/be/
 │   │   ├── logger/                 # Structured logging with Go log/slog and context tracing
 │   │   ├── response/               # Standardized JSON response envelope & pagination
 │   │   ├── testutil/               # Test isolation DB helpers (transaction rollback)
-│   │   └── validator/              # Custom validation tags for Gin (uuidv7, notblank)
+│   │   └── validator/              # Custom validation tags for Gin (notblank)
 │   ├── repository/                 # Data access layer (PostgreSQL GORM implementations)
 │   │   └── postgres/
 │   │       ├── ticket_repo.go

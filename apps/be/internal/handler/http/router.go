@@ -29,10 +29,11 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	// Register custom validation rules for Gin
 	validator.RegisterCustomValidators()
 
-	switch cfg.AppEnv {
-	case string(config.EnvProduction):
+	appEnv := config.Environment(cfg.AppEnv)
+	switch appEnv {
+	case config.EnvProduction:
 		gin.SetMode(gin.ReleaseMode)
-	case string(config.EnvTest):
+	case config.EnvTest:
 		gin.SetMode(gin.TestMode)
 	default:
 		gin.SetMode(gin.DebugMode)
@@ -54,7 +55,7 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 	}
 
 	// Swagger Documentation UI (disabled in production)
-	if cfg.AppEnv != string(config.EnvProduction) {
+	if appEnv != config.EnvProduction {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
