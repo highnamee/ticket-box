@@ -1,7 +1,7 @@
 package http
 
 import (
-	"log"
+	"log/slog"
 
 	_ "ticket-box-be/docs"
 	"ticket-box-be/internal/admin"
@@ -36,13 +36,14 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 
 	// Global Middlewares
 	r.Use(gin.Recovery())
-	r.Use(gin.Logger())
+	r.Use(middleware.RequestIDMiddleware())
+	r.Use(middleware.RequestLoggerMiddleware())
 	r.Use(middleware.CORSMiddleware(cfg.CORSAllowedOrigins))
 
 	// Mount GoAdmin Admin Panel
 	if cfg.AppConfig != nil && cfg.EnableAdmin {
 		if err := admin.Mount(r, cfg.AppConfig); err != nil {
-			log.Printf("⚠️ Warning: Failed to mount GoAdmin engine: %v", err)
+			slog.Warn("Failed to mount GoAdmin engine", "error", err)
 		}
 	}
 

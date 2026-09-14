@@ -1,30 +1,36 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"ticket-box-be/internal/admin"
 	"ticket-box-be/internal/config"
 	"ticket-box-be/internal/pkg/database"
+	"ticket-box-be/internal/pkg/logger"
 )
 
 func main() {
 	cfg := config.Load()
+	logger.InitLogger(cfg.AppEnv)
 
 	db, err := database.NewDatabase(cfg)
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to database for migration: %v", err)
+		slog.Error("Failed to connect to database for migration", "error", err)
+		os.Exit(1)
 	}
 
 	// 1. Migrate Domain Models (tickets, etc.)
 	if err := database.AutoMigrate(db); err != nil {
-		log.Fatalf("❌ Migration failed: %v", err)
+		slog.Error("Migration failed", "error", err)
+		os.Exit(1)
 	}
 
 	// 2. Migrate GoAdmin Internal Schema
 	if err := admin.InitSchema(db, cfg); err != nil {
-		log.Fatalf("❌ GoAdmin schema initialization failed: %v", err)
+		slog.Error("GoAdmin schema initialization failed", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("🎉 Migration finished successfully!")
+	slog.Info("Migration finished successfully")
 }

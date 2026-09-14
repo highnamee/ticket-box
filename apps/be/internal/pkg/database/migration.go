@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 
 	"ticket-box-be/internal/domain"
 
@@ -11,7 +11,7 @@ import (
 
 // AutoMigrate runs database migrations for all domain models
 func AutoMigrate(db *gorm.DB) error {
-	log.Println("🔄 Running database migrations...")
+	slog.Info("Running database migrations...")
 
 	models := []interface{}{
 		&domain.Ticket{},
@@ -23,6 +23,6 @@ func AutoMigrate(db *gorm.DB) error {
 		}
 	}
 
-	log.Println("✅ Database migrations completed successfully")
+	slog.Info("Database migrations completed successfully")
 	return nil
 }

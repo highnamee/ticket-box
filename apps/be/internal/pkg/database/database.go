@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"ticket-box-be/internal/config"
@@ -71,7 +71,7 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	if cfg.AppEnv != "test" {
-		log.Println("✅ Database connected successfully")
+		slog.Info("Database connected successfully", "host", cfg.DB.Host, "dbname", cfg.DB.DBName)
 	}
 
 	return db, nil

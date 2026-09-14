@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +14,7 @@ import (
 	"ticket-box-be/internal/config"
 	httpHandler "ticket-box-be/internal/handler/http"
 	"ticket-box-be/internal/pkg/database"
+	"ticket-box-be/internal/pkg/logger"
 	"ticket-box-be/internal/repository/postgres"
 	"ticket-box-be/internal/service"
 )
@@ -32,23 +33,27 @@ func main() {
 	// 1. Load Configuration
 	cfg := config.Load()
 
-	// 2. Initialize Database Connection
+	// 2. Initialize Structured Logger
+	logger.InitLogger(cfg.AppEnv)
+
+	// 3. Initialize Database Connection
 	db, err := database.NewDatabase(cfg)
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to database: %v", err)
+		slog.Error("Failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
-	// 3. Initialize Repositories
+	// 4. Initialize Repositories
 	ticketRepo := postgres.NewTicketRepository(db)
 
-	// 4. Initialize Services
+	// 5. Initialize Services
 	ticketService := service.NewTicketService(ticketRepo)
 
-	// 5. Initialize Handlers
+	// 6. Initialize Handlers
 	healthHandler := httpHandler.NewHealthHandler()
 	ticketHandler := httpHandler.NewTicketHandler(ticketService)
 
-	// 5. Setup Router
+	// 7. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
 		AppConfig:          cfg,
 		AppEnv:             cfg.AppEnv,
@@ -58,7 +63,7 @@ func main() {
 		EnableAdmin:        cfg.EnableAdmin,
 	})
 
-	// 4. Configure HTTP Server
+	// 8. Configure HTTP Server
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
 		Handler:      router,
@@ -67,33 +72,39 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// 5. Start Server in a separate goroutine
+	// 9. Start Server in a separate goroutine
 	go func() {
-		log.Printf("🚀 Ticket Box Backend running on http://localhost:%s (Env: %s)", cfg.Port, cfg.AppEnv)
+		slog.Info("Ticket Box Backend starting",
+			"port", cfg.Port,
+			"env", cfg.AppEnv,
+			"url", fmt.Sprintf("http://localhost:%s", cfg.Port),
+		)
 		if cfg.EnableAdmin {
-			log.Printf("🛠️  GoAdmin Panel available at http://localhost:%s/admin", cfg.Port)
+			slog.Info("GoAdmin Panel available", "url", fmt.Sprintf("http://localhost:%s/admin", cfg.Port))
 		}
 		if !cfg.IsProduction() {
-			log.Printf("📖 Swagger UI available at http://localhost:%s/swagger/index.html", cfg.Port)
+			slog.Info("Swagger UI available", "url", fmt.Sprintf("http://localhost:%s/swagger/index.html", cfg.Port))
 		}
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Server error: %v", err)
+			slog.Error("Server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
-	// 6. Graceful Shutdown
+	// 10. Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server gracefully...")
+	slog.Info("Shutting down server gracefully...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
+		slog.Error("Server forced to shutdown", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server exited cleanly.")
+	slog.Info("Server exited cleanly.")
 }
