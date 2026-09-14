@@ -15,6 +15,7 @@ import (
 	httpHandler "ticket-box-be/internal/handler/http"
 	"ticket-box-be/internal/pkg/database"
 	"ticket-box-be/internal/repository/postgres"
+	"ticket-box-be/internal/service"
 )
 
 // @title                      Ticket Box Backend API
@@ -40,9 +41,12 @@ func main() {
 	// 3. Initialize Repositories
 	ticketRepo := postgres.NewTicketRepository(db)
 
-	// 4. Initialize Handlers
+	// 4. Initialize Services
+	ticketService := service.NewTicketService(ticketRepo)
+
+	// 5. Initialize Handlers
 	healthHandler := httpHandler.NewHealthHandler()
-	ticketHandler := httpHandler.NewTicketHandler(ticketRepo)
+	ticketHandler := httpHandler.NewTicketHandler(ticketService)
 
 	// 5. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{

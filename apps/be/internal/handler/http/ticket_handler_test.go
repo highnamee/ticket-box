@@ -19,35 +19,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// MockTicketRepository for unit testing
-type MockTicketRepository struct {
+// MockTicketService for handler unit testing
+type MockTicketService struct {
 	mock.Mock
 }
 
-func (m *MockTicketRepository) Create(ctx context.Context, ticket *domain.Ticket) error {
-	args := m.Called(ctx, ticket)
-	return args.Error(0)
-}
-
-func (m *MockTicketRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Ticket, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	ticket, _ := args.Get(0).(*domain.Ticket)
-	return ticket, args.Error(1)
-}
-
-func (m *MockTicketRepository) FindAll(ctx context.Context) ([]domain.Ticket, error) {
-	args := m.Called(ctx)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	tickets, _ := args.Get(0).([]domain.Ticket)
-	return tickets, args.Error(1)
-}
-
-func (m *MockTicketRepository) FindPublic(ctx context.Context, page, limit int) ([]domain.Ticket, int64, error) {
+func (m *MockTicketService) GetPublicTickets(ctx context.Context, page, limit int) ([]domain.Ticket, int64, error) {
 	args := m.Called(ctx, page, limit)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -56,14 +33,13 @@ func (m *MockTicketRepository) FindPublic(ctx context.Context, page, limit int) 
 	return tickets, args.Get(1).(int64), args.Error(2)
 }
 
-func (m *MockTicketRepository) Update(ctx context.Context, ticket *domain.Ticket) error {
-	args := m.Called(ctx, ticket)
-	return args.Error(0)
-}
-
-func (m *MockTicketRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (m *MockTicketService) GetTicketByID(ctx context.Context, id uuid.UUID) (*domain.Ticket, error) {
 	args := m.Called(ctx, id)
-	return args.Error(0)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	ticket, _ := args.Get(0).(*domain.Ticket)
+	return ticket, args.Error(1)
 }
 
 type PaginatedTicketResponse struct {
@@ -74,8 +50,8 @@ type PaginatedTicketResponse struct {
 }
 
 func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
-	mockRepo := new(MockTicketRepository)
-	handler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	handler := NewTicketHandler(mockService)
 
 	mockTickets := []domain.Ticket{
 		{
@@ -101,7 +77,7 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	}
 
 	// Default pagination page=1, limit=10
-	mockRepo.On("FindPublic", mock.Anything, 1, 10).Return(mockTickets, int64(2), nil)
+	mockService.On("GetPublicTickets", mock.Anything, 1, 10).Return(mockTickets, int64(2), nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -138,12 +114,12 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	assert.Equal(t, 150.0, res.Data.Items[0].Price)
 	assert.Equal(t, 50, res.Data.Items[0].AvailableStock)
 	assert.Equal(t, domain.TicketStatusActive, res.Data.Items[0].Status)
-	mockRepo.AssertExpectations(t)
+	mockService.AssertExpectations(t)
 }
 
 func TestTicketHandler_GetPublicTickets_WithCustomPagination(t *testing.T) {
-	mockRepo := new(MockTicketRepository)
-	handler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	handler := NewTicketHandler(mockService)
 
 	mockTickets := []domain.Ticket{
 		{
@@ -158,7 +134,7 @@ func TestTicketHandler_GetPublicTickets_WithCustomPagination(t *testing.T) {
 		},
 	}
 
-	mockRepo.On("FindPublic", mock.Anything, 2, 5).Return(mockTickets, int64(11), nil)
+	mockService.On("GetPublicTickets", mock.Anything, 2, 5).Return(mockTickets, int64(11), nil)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -178,12 +154,12 @@ func TestTicketHandler_GetPublicTickets_WithCustomPagination(t *testing.T) {
 	assert.Equal(t, 5, res.Data.Pagination.Limit)
 	assert.Equal(t, int64(11), res.Data.Pagination.TotalItems)
 	assert.Equal(t, 3, res.Data.Pagination.TotalPages)
-	mockRepo.AssertExpectations(t)
+	mockService.AssertExpectations(t)
 }
 
 func TestTicketHandler_GetPublicTickets_InvalidQueryParams(t *testing.T) {
-	mockRepo := new(MockTicketRepository)
-	handler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	handler := NewTicketHandler(mockService)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -203,8 +179,8 @@ func TestTicketHandler_GetPublicTickets_InvalidQueryParams(t *testing.T) {
 }
 
 func TestTicketHandler_GetPublicTickets_InvalidLimit(t *testing.T) {
-	mockRepo := new(MockTicketRepository)
-	handler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	handler := NewTicketHandler(mockService)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -224,8 +200,8 @@ func TestTicketHandler_GetPublicTickets_InvalidLimit(t *testing.T) {
 }
 
 func TestTicketHandler_GetPublicTickets_NonNumericQuery(t *testing.T) {
-	mockRepo := new(MockTicketRepository)
-	handler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	handler := NewTicketHandler(mockService)
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -245,10 +221,10 @@ func TestTicketHandler_GetPublicTickets_NonNumericQuery(t *testing.T) {
 }
 
 func TestTicketHandler_GetPublicTickets_Error(t *testing.T) {
-	mockRepo := new(MockTicketRepository)
-	handler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	handler := NewTicketHandler(mockService)
 
-	mockRepo.On("FindPublic", mock.Anything, 1, 10).Return(nil, int64(0), errors.New("database failure"))
+	mockService.On("GetPublicTickets", mock.Anything, 1, 10).Return(nil, int64(0), errors.New("database failure"))
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -265,5 +241,5 @@ func TestTicketHandler_GetPublicTickets_Error(t *testing.T) {
 	assert.False(t, res.Success)
 	assert.Equal(t, "Failed to retrieve tickets", res.Message)
 	assert.Equal(t, "database failure", res.Error)
-	mockRepo.AssertExpectations(t)
+	mockService.AssertExpectations(t)
 }

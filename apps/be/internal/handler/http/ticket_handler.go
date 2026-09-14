@@ -10,11 +10,11 @@ import (
 )
 
 type TicketHandler struct {
-	ticketRepo domain.TicketRepository
+	ticketService domain.TicketService
 }
 
-func NewTicketHandler(ticketRepo domain.TicketRepository) *TicketHandler {
-	return &TicketHandler{ticketRepo: ticketRepo}
+func NewTicketHandler(ticketService domain.TicketService) *TicketHandler {
+	return &TicketHandler{ticketService: ticketService}
 }
 
 // GetPublicTickets godoc
@@ -35,7 +35,7 @@ func (h *TicketHandler) GetPublicTickets(c *gin.Context) {
 		return
 	}
 
-	tickets, total, err := h.ticketRepo.FindPublic(c.Request.Context(), query.Page, query.Limit)
+	tickets, total, err := h.ticketService.GetPublicTickets(c.Request.Context(), query.Page, query.Limit)
 	if err != nil {
 		response.InternalServerError(c, "Failed to retrieve tickets", err.Error())
 		return

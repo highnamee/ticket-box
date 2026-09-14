@@ -57,3 +57,10 @@ type TicketRepository interface {
 	Update(ctx context.Context, ticket *Ticket) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
+
+// TicketService defines contract for ticket business logic use cases
+type TicketService interface {
+	GetPublicTickets(ctx context.Context, page, limit int) ([]Ticket, int64, error)
+	GetTicketByID(ctx context.Context, id uuid.UUID) (*Ticket, error)
+}
+

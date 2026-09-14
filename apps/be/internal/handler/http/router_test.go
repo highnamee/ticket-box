@@ -13,9 +13,9 @@ import (
 
 func TestRouter_Endpoints(t *testing.T) {
 	healthHandler := NewHealthHandler()
-	mockRepo := new(MockTicketRepository)
-	mockRepo.On("FindPublic", mock.Anything, mock.Anything, mock.Anything).Return([]domain.Ticket{}, int64(0), nil)
-	ticketHandler := NewTicketHandler(mockRepo)
+	mockService := new(MockTicketService)
+	mockService.On("GetPublicTickets", mock.Anything, mock.Anything, mock.Anything).Return([]domain.Ticket{}, int64(0), nil)
+	ticketHandler := NewTicketHandler(mockService)
 
 	router := NewRouter(RouterConfig{
 		AppEnv:        "development",
