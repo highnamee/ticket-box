@@ -16,7 +16,7 @@ type PaginationQuery struct {
 type PublicTicketResponse struct {
 	ID             uuid.UUID           `json:"id"`
 	Name           string              `json:"name"`
-	Description    string              `json:"description,omitempty"`
+	Description    string              `json:"description"`
 	Price          float64             `json:"price"`
 	AvailableStock int                 `json:"available_stock"`
 	Status         domain.TicketStatus `json:"status"`

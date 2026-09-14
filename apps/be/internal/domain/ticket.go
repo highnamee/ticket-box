@@ -19,7 +19,7 @@ const (
 type Ticket struct {
 	ID             uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Name           string         `gorm:"type:varchar(255);not null" json:"name"`
-	Description    string         `gorm:"type:text" json:"description,omitempty"`
+	Description    string         `gorm:"type:text" json:"description"`
 	Price          float64        `gorm:"type:decimal(12,2);not null;default:0" json:"price"`
 	TotalQuantity  int            `gorm:"not null;default:0" json:"total_quantity"`
 	AvailableStock int            `gorm:"not null;default:0" json:"available_stock"`
