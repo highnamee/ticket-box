@@ -58,7 +58,11 @@ Follow the established layered pattern strictly:
    - Implements business use cases and orchestrates repository calls.
 
 4. **Handler Layer (`internal/handler/http/`)**:
-   - Handles HTTP request binding, query/body DTOs (e.g. `PaginationQuery`), validation, and HTTP-to-domain mapping. Request DTOs with framework tags (`form:`, `json:`) live in this layer, never in `domain`.
+   - Handles HTTP request binding, validation, controller flow, and response formatting.
+   - **File Convention**: Separate handler logic from request/response DTOs:
+     - `<feature>_handler.go`: Controller methods, routing, service/repo calls, and HTTP responses.
+     - `<feature>_dto.go`: Request queries/bodies with Gin binding tags (`form:`, `json:`), Response Serializers/DTOs, and mapping functions.
+     - `<feature>_handler_test.go`: Unit tests for endpoints and serialization.
    - Returns standardized API responses via `internal/pkg/response`:
      - Regular endpoints: `response.Success(c, http.StatusOK, "message", data)`
      - Paginated endpoints: `response.SuccessWithPagination(c, http.StatusOK, "message", items, paginationMeta)` (wraps `{ items, pagination }` inside `data`)

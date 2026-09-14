@@ -112,6 +112,16 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
+	type PaginatedTicketResponse struct {
+		Success bool `json:"success"`
+		Message string `json:"message"`
+		Data struct {
+			Items []PublicTicketResponse `json:"items"`
+			Pagination response.PaginationMeta `json:"pagination"`
+		} `json:"data"`
+		Error interface{} `json:"error"`
+	}
+
 	var res PaginatedTicketResponse
 	err := json.Unmarshal(w.Body.Bytes(), &res)
 	require.NoError(t, err)
@@ -122,6 +132,12 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	assert.Equal(t, 10, res.Data.Pagination.Limit)
 	assert.Equal(t, int64(2), res.Data.Pagination.TotalItems)
 	assert.Equal(t, 1, res.Data.Pagination.TotalPages)
+	require.Len(t, res.Data.Items, 2)
+	assert.Equal(t, mockTickets[0].ID, res.Data.Items[0].ID)
+	assert.Equal(t, "VIP Pass", res.Data.Items[0].Name)
+	assert.Equal(t, 150.0, res.Data.Items[0].Price)
+	assert.Equal(t, 50, res.Data.Items[0].AvailableStock)
+	assert.Equal(t, domain.TicketStatusActive, res.Data.Items[0].Status)
 	mockRepo.AssertExpectations(t)
 }
 

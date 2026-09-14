@@ -9,11 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PaginationQuery struct {
-	Page  int `form:"page,default=1" binding:"min=1"`
-	Limit int `form:"limit,default=10" binding:"min=1,max=100"`
-}
-
 type TicketHandler struct {
 	ticketRepo domain.TicketRepository
 }
@@ -46,6 +41,7 @@ func (h *TicketHandler) GetPublicTickets(c *gin.Context) {
 		return
 	}
 
+	items := toPublicTicketResponseList(tickets)
 	pagination := response.NewPaginationMeta(query.Page, query.Limit, total)
-	response.SuccessWithPagination(c, http.StatusOK, "Tickets retrieved successfully", tickets, pagination)
+	response.SuccessWithPagination(c, http.StatusOK, "Tickets retrieved successfully", items, pagination)
 }
