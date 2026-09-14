@@ -53,7 +53,7 @@ type TicketRepository interface {
 	Create(ctx context.Context, ticket *Ticket) error
 	FindByID(ctx context.Context, id uuid.UUID) (*Ticket, error)
 	FindAll(ctx context.Context) ([]Ticket, error)
-	FindPublic(ctx context.Context) ([]Ticket, error)
+	FindPublic(ctx context.Context, page, limit int) ([]Ticket, int64, error)
 	Update(ctx context.Context, ticket *Ticket) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }

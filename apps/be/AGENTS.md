@@ -33,7 +33,8 @@ Follow the established layered pattern strictly:
 
 1. **Domain Layer (`internal/domain/`)**:
    - Contains entity structs, value objects, domain errors, and interface contracts (`Repository`, `Service`).
-   - Must remain pure Go: **No framework imports (Gin, HTTP) or database driver dependencies**.
+   - Must remain pure Go: **No framework imports (Gin, HTTP, net/http) or database driver dependencies**.
+   - Define sentinel errors with standard `errors.New` (e.g. `ErrTicketNotFound = errors.New("ticket not found")`).
    - Primary Keys: Always use **UUID v7 (Time-Ordered)** with `ID uuid.UUID` (`gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`).
    - Hook: Include `BeforeCreate(_ *gorm.DB) error` generating `uuid.NewV7()` when `t.ID == uuid.Nil`:
      ```go
@@ -57,7 +58,11 @@ Follow the established layered pattern strictly:
    - Implements business use cases and orchestrates repository calls.
 
 4. **Handler Layer (`internal/handler/http/`)**:
-   - Handles request validation, parameter binding (`c.ShouldBindJSON`), and returns standardized API responses via `internal/pkg/response`.
+   - Handles HTTP request binding, query/body DTOs (e.g. `PaginationQuery`), validation, and HTTP-to-domain mapping. Request DTOs with framework tags (`form:`, `json:`) live in this layer, never in `domain`.
+   - Returns standardized API responses via `internal/pkg/response`:
+     - Regular endpoints: `response.Success(c, http.StatusOK, "message", data)`
+     - Paginated endpoints: `response.SuccessWithPagination(c, http.StatusOK, "message", items, paginationMeta)` (wraps `{ items, pagination }` inside `data`)
+     - Error handling: `response.BadRequest(c, message, err)`, `response.NotFound(c, message, err)`, `response.InternalServerError(c, message, err)`.
    - Never write database queries directly inside handlers.
 
 ---

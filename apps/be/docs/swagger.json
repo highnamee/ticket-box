@@ -40,7 +40,7 @@
         },
         "/tickets": {
             "get": {
-                "description": "Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets)",
+                "description": "Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets) with pagination",
                 "produces": [
                     "application/json"
                 ],
@@ -48,6 +48,22 @@
                     "Tickets"
                 ],
                 "summary": "Get public tickets",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number (default 1, min 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page (default 10, min 1, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Tickets retrieved successfully",
@@ -60,14 +76,17 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/domain.Ticket"
-                                            }
+                                            "$ref": "#/definitions/response.PaginatedData"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
                         }
                     },
                     "500": {
@@ -81,51 +100,6 @@
         }
     },
     "definitions": {
-        "domain.Ticket": {
-            "type": "object",
-            "properties": {
-                "available_stock": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "status": {
-                    "$ref": "#/definitions/domain.TicketStatus"
-                },
-                "total_quantity": {
-                    "type": "integer"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.TicketStatus": {
-            "type": "string",
-            "enum": [
-                "ACTIVE",
-                "SOLD_OUT",
-                "INACTIVE"
-            ],
-            "x-enum-varnames": [
-                "TicketStatusActive",
-                "TicketStatusSoldOut",
-                "TicketStatusInactive"
-            ]
-        },
         "response.APIResponse": {
             "type": "object",
             "properties": {
@@ -136,6 +110,32 @@
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.PaginatedData": {
+            "type": "object",
+            "properties": {
+                "items": {},
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationMeta"
+                }
+            }
+        },
+        "response.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total_items": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         }

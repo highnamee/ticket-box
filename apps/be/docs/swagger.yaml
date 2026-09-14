@@ -1,36 +1,5 @@
 basePath: /api/v1
 definitions:
-  domain.Ticket:
-    properties:
-      available_stock:
-        type: integer
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      price:
-        type: number
-      status:
-        $ref: '#/definitions/domain.TicketStatus'
-      total_quantity:
-        type: integer
-      updated_at:
-        type: string
-    type: object
-  domain.TicketStatus:
-    enum:
-    - ACTIVE
-    - SOLD_OUT
-    - INACTIVE
-    type: string
-    x-enum-varnames:
-    - TicketStatusActive
-    - TicketStatusSoldOut
-    - TicketStatusInactive
   response.APIResponse:
     properties:
       data: {}
@@ -39,6 +8,23 @@ definitions:
         type: string
       success:
         type: boolean
+    type: object
+  response.PaginatedData:
+    properties:
+      items: {}
+      pagination:
+        $ref: '#/definitions/response.PaginationMeta'
+    type: object
+  response.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -64,7 +50,18 @@ paths:
   /tickets:
     get:
       description: Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private
-        INACTIVE tickets)
+        INACTIVE tickets) with pagination
+      parameters:
+      - default: 1
+        description: Page number (default 1, min 1)
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page (default 10, min 1, max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -75,10 +72,12 @@ paths:
             - $ref: '#/definitions/response.APIResponse'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/domain.Ticket'
-                  type: array
+                  $ref: '#/definitions/response.PaginatedData'
               type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
         "500":
           description: Internal server error
           schema:

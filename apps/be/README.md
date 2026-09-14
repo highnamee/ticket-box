@@ -130,7 +130,14 @@ make lint
 
 ---
 
-## 📡 API Endpoints & Documentation
+## 📡 API Documentation & Admin Panel
+
+### Swagger OpenAPI Documentation (Web UI)
+
+- **URL**: `http://localhost:8080/swagger/index.html`
+- **Description**: Interactive Swagger UI for exploring and testing API endpoints.
+- **Environment**: **Enabled in Development / Staging only** (`APP_ENV != "production"`). Automatically disabled (returns 404) in Production for security.
+- **Code generation**: The `docs/` directory is **auto-generated**. Run `make swagger` to re-generate docs whenever API annotations change.
 
 ### GoAdmin Management Panel (Web UI)
 
@@ -139,27 +146,5 @@ make lint
 - **Environment**: **Disabled by default in Production** (`APP_ENV=production`) unless `ENABLE_ADMIN=true` is explicitly configured with strong credentials.
 - **Description**: Full-featured database & entity management dashboard (AdminLTE theme) for managing Tickets, inventory, roles, permissions, and audit logs.
 
-### Swagger OpenAPI Documentation (Web UI)
 
-- **URL**: `http://localhost:8080/swagger/index.html`
-- **Method**: `GET`
-- **Description**: Interactive Swagger UI for exploring and testing API endpoints.
-- **Environment**: **Enabled in Development / Staging only** (`APP_ENV != "production"`). Automatically disabled (returns 404) in Production for security.
-- **Code generation**: The `docs/` directory is **auto-generated**. Run `make swagger` to re-generate docs whenever API annotations change.
-
-### Health Check
-
-- **URL**: `/health` or `/api/v1/ping`
-- **Method**: `GET`
-- **Response**:
-  ```json
-  {
-    "success": true,
-    "message": "Ticket Box API is healthy",
-    "data": {
-      "status": "UP",
-      "timestamp": "2026-09-13T11:46:19.467472Z"
-    }
-  }
-  ```
 

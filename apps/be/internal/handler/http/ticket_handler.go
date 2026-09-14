@@ -9,6 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type PaginationQuery struct {
+	Page  int `form:"page,default=1" binding:"min=1"`
+	Limit int `form:"limit,default=10" binding:"min=1,max=100"`
+}
+
 type TicketHandler struct {
 	ticketRepo domain.TicketRepository
 }
@@ -19,18 +24,28 @@ func NewTicketHandler(ticketRepo domain.TicketRepository) *TicketHandler {
 
 // GetPublicTickets godoc
 // @Summary      Get public tickets
-// @Description  Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets)
+// @Description  Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets) with pagination
 // @Tags         Tickets
 // @Produce      json
-// @Success      200  {object}  response.APIResponse{data=[]domain.Ticket}  "Tickets retrieved successfully"
-// @Failure      500  {object}  response.APIResponse                        "Internal server error"
+// @Param        page   query     int  false  "Page number (default 1, min 1)"                default(1)
+// @Param        limit  query     int  false  "Items per page (default 10, min 1, max 100)"   default(10)
+// @Success      200    {object}  response.APIResponse{data=response.PaginatedData}              "Tickets retrieved successfully"
+// @Failure      400    {object}  response.APIResponse                                           "Bad request"
+// @Failure      500    {object}  response.APIResponse                                           "Internal server error"
 // @Router       /tickets [get]
 func (h *TicketHandler) GetPublicTickets(c *gin.Context) {
-	tickets, err := h.ticketRepo.FindPublic(c.Request.Context())
-	if err != nil {
-		response.InternalServerError(c, "Failed to retrieve tickets")
+	var query PaginationQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.BadRequest(c, "Invalid pagination query", err.Error())
 		return
 	}
 
-	response.Success(c, http.StatusOK, "Tickets retrieved successfully", tickets)
+	tickets, total, err := h.ticketRepo.FindPublic(c.Request.Context(), query.Page, query.Limit)
+	if err != nil {
+		response.InternalServerError(c, "Failed to retrieve tickets", err.Error())
+		return
+	}
+
+	pagination := response.NewPaginationMeta(query.Page, query.Limit, total)
+	response.SuccessWithPagination(c, http.StatusOK, "Tickets retrieved successfully", tickets, pagination)
 }

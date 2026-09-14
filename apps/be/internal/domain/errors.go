@@ -8,4 +8,5 @@ var (
 	ErrTicketSoldOut     = errors.New("ticket is sold out")
 	ErrInsufficientStock = errors.New("insufficient ticket stock")
 	ErrInvalidQuantity   = errors.New("invalid quantity requested")
+	ErrInvalidPagination = errors.New("invalid pagination parameters")
 )

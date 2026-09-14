@@ -42,13 +42,34 @@ func (r *TicketRepository) FindAll(ctx context.Context) ([]domain.Ticket, error)
 	return tickets, err
 }
 
-func (r *TicketRepository) FindPublic(ctx context.Context) ([]domain.Ticket, error) {
+func (r *TicketRepository) FindPublic(ctx context.Context, page, limit int) ([]domain.Ticket, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	} else if limit > 100 {
+		limit = 100
+	}
+
 	var tickets []domain.Ticket
-	err := r.db.WithContext(ctx).
-		Where("status IN ?", []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut}).
+	var total int64
+
+	baseQuery := r.db.WithContext(ctx).
+		Model(&domain.Ticket{}).
+		Where("status IN ?", []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut})
+
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := baseQuery.
 		Order("price ASC").
+		Offset(offset).
+		Limit(limit).
 		Find(&tickets).Error
-	return tickets, err
+	return tickets, total, err
 }
 
 func (r *TicketRepository) Update(ctx context.Context, ticket *domain.Ticket) error {

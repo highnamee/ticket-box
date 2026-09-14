@@ -76,8 +76,15 @@ func TestTicketRepository_FindPublic(t *testing.T) {
 	repo := postgres.NewTicketRepository(tx)
 	ctx := context.Background()
 
-	activeTicket := &domain.Ticket{
-		Name:           "Active General Ticket",
+	activeTicket1 := &domain.Ticket{
+		Name:           "Active Ticket 1",
+		Price:          30.00,
+		TotalQuantity:  100,
+		AvailableStock: 100,
+		Status:         domain.TicketStatusActive,
+	}
+	activeTicket2 := &domain.Ticket{
+		Name:           "Active Ticket 2",
 		Price:          50.00,
 		TotalQuantity:  100,
 		AvailableStock: 100,
@@ -98,28 +105,31 @@ func TestTicketRepository_FindPublic(t *testing.T) {
 		Status:         domain.TicketStatusSoldOut,
 	}
 
-	require.NoError(t, repo.Create(ctx, activeTicket))
+	require.NoError(t, repo.Create(ctx, activeTicket1))
+	require.NoError(t, repo.Create(ctx, activeTicket2))
 	require.NoError(t, repo.Create(ctx, inactiveTicket))
 	require.NoError(t, repo.Create(ctx, soldOutTicket))
 
-	publicList, err := repo.FindPublic(ctx)
+	// Page 1 with limit 2 (Total should be 3: activeTicket1, activeTicket2, soldOutTicket)
+	publicList, total, err := repo.FindPublic(ctx, 1, 2)
 	require.NoError(t, err)
+	assert.Equal(t, int64(3), total)
+	assert.Len(t, publicList, 2)
 
-	// Ensure ACTIVE and SOLD_OUT tickets are included, INACTIVE is excluded
-	foundActive := false
-	foundSoldOut := false
+	// Ensure INACTIVE is not present and order is ASC by price
 	for _, tk := range publicList {
 		assert.Contains(t, []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut}, tk.Status)
-		if tk.ID == activeTicket.ID {
-			foundActive = true
-		}
-		if tk.ID == soldOutTicket.ID {
-			foundSoldOut = true
-		}
 		assert.NotEqual(t, inactiveTicket.ID, tk.ID, "Inactive ticket should not be returned in public scope")
 	}
-	assert.True(t, foundActive, "Expected activeTicket to be found in FindPublic results")
-	assert.True(t, foundSoldOut, "Expected soldOutTicket to be found in FindPublic results")
+	assert.Equal(t, activeTicket1.ID, publicList[0].ID) // 30.00
+	assert.Equal(t, activeTicket2.ID, publicList[1].ID) // 50.00
+
+	// Page 2 with limit 2
+	publicListPage2, total2, err := repo.FindPublic(ctx, 2, 2)
+	require.NoError(t, err)
+	assert.Equal(t, int64(3), total2)
+	assert.Len(t, publicListPage2, 1)
+	assert.Equal(t, soldOutTicket.ID, publicListPage2[0].ID) // 150.00
 }
 
 func TestTicketRepository_Update(t *testing.T) {
