@@ -56,15 +56,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	accessTTL, err := time.ParseDuration(cfg.JWT.AccessTokenTTL)
-	if err != nil {
-		accessTTL = 15 * time.Minute
-	}
-	refreshTTL, err := time.ParseDuration(cfg.JWT.RefreshTokenTTL)
-	if err != nil {
-		refreshTTL = 7 * 24 * time.Hour
-	}
-
 	// 5. Initialize Repositories
 	ticketRepo := postgres.NewTicketRepository(db)
 	userRepo := postgres.NewUserRepository(db)
@@ -72,7 +63,7 @@ func main() {
 
 	// 6. Initialize Services
 	ticketService := service.NewTicketService(ticketRepo)
-	authService := service.NewAuthService(userRepo, resetRepo, tokenMaker, accessTTL, refreshTTL)
+	authService := service.NewAuthService(userRepo, resetRepo, tokenMaker, cfg.JWT.AccessTokenTTL, cfg.JWT.RefreshTokenTTL)
 
 	// 7. Initialize Handlers
 	healthHandler := httpHandler.NewHealthHandler()

@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -30,9 +31,9 @@ type Config struct {
 }
 
 type JWTConfig struct {
-	Secret          string `env:"JWT_SECRET"`
-	AccessTokenTTL  string `env:"JWT_ACCESS_TTL" envDefault:"15m"`
-	RefreshTokenTTL string `env:"JWT_REFRESH_TTL" envDefault:"168h"`
+	Secret          string        `env:"JWT_SECRET"`
+	AccessTokenTTL  time.Duration `env:"JWT_ACCESS_TTL" envDefault:"15m"`
+	RefreshTokenTTL time.Duration `env:"JWT_REFRESH_TTL" envDefault:"168h"`
 }
 
 // IsProduction checks if current environment is production

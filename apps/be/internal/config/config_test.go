@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -29,8 +30,8 @@ func TestLoad_DefaultValues(t *testing.T) {
 	assert.Equal(t, "ticketbox_db", cfg.DB.DBName)
 	assert.Empty(t, cfg.CORS.AllowedOrigins)
 	assert.Empty(t, cfg.JWT.Secret) // No default — must be supplied via JWT_SECRET env var
-	assert.Equal(t, "15m", cfg.JWT.AccessTokenTTL)
-	assert.Equal(t, "168h", cfg.JWT.RefreshTokenTTL)
+	assert.Equal(t, 15*time.Minute, cfg.JWT.AccessTokenTTL)
+	assert.Equal(t, 168*time.Hour, cfg.JWT.RefreshTokenTTL)
 }
 
 func TestLoad_CustomEnvValues(t *testing.T) {
@@ -44,6 +45,8 @@ func TestLoad_CustomEnvValues(t *testing.T) {
 	t.Setenv("DB_NAME", "production_db")
 	t.Setenv("CORS_ALLOWED_ORIGINS", "https://ticketbox.com, https://admin.ticketbox.com")
 	t.Setenv("JWT_SECRET", "super-secret-key-for-production-use-only-32chars")
+	t.Setenv("JWT_ACCESS_TTL", "30m")
+	t.Setenv("JWT_REFRESH_TTL", "72h")
 
 	cfg := Load()
 
@@ -56,6 +59,8 @@ func TestLoad_CustomEnvValues(t *testing.T) {
 	assert.Equal(t, 5433, cfg.DB.Port)
 	assert.Equal(t, "production_db", cfg.DB.DBName)
 	assert.Equal(t, []string{"https://ticketbox.com", "https://admin.ticketbox.com"}, cfg.CORS.AllowedOrigins)
+	assert.Equal(t, 30*time.Minute, cfg.JWT.AccessTokenTTL)
+	assert.Equal(t, 72*time.Hour, cfg.JWT.RefreshTokenTTL)
 }
 
 func TestConfig_EnvironmentHelpers(t *testing.T) {
