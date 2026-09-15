@@ -28,6 +28,9 @@ func TestLoad_DefaultValues(t *testing.T) {
 	assert.Equal(t, "localhost", cfg.DB.Host)
 	assert.Equal(t, "ticketbox_db", cfg.DB.DBName)
 	assert.Empty(t, cfg.CORS.AllowedOrigins)
+	assert.Equal(t, "default_insecure_jwt_secret_change_in_production", cfg.JWT.Secret)
+	assert.Equal(t, "15m", cfg.JWT.AccessTokenTTL)
+	assert.Equal(t, "168h", cfg.JWT.RefreshTokenTTL)
 }
 
 func TestLoad_CustomEnvValues(t *testing.T) {

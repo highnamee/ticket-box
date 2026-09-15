@@ -26,6 +26,13 @@ type Config struct {
 	Admin       AdminConfig
 	DB          DatabaseConfig
 	CORS        CORSConfig
+	JWT         JWTConfig
+}
+
+type JWTConfig struct {
+	Secret          string `env:"JWT_SECRET" envDefault:"default_insecure_jwt_secret_change_in_production"`
+	AccessTokenTTL  string `env:"JWT_ACCESS_TTL" envDefault:"15m"`
+	RefreshTokenTTL string `env:"JWT_REFRESH_TTL" envDefault:"168h"`
 }
 
 // IsProduction checks if current environment is production
