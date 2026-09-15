@@ -8,6 +8,7 @@ import (
 	"ticket-box-be/internal/domain"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -19,10 +20,16 @@ func NewUserRepository(db *gorm.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
+// isUniqueViolation reports whether err is a PostgreSQL unique constraint violation (code 23505).
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+}
+
 func (r *UserRepository) Create(ctx context.Context, user *domain.User) error {
 	err := r.db.WithContext(ctx).Create(user).Error
 	if err != nil {
-		if strings.Contains(err.Error(), "idx_users_email") || strings.Contains(err.Error(), "duplicate key") {
+		if isUniqueViolation(err) {
 			return domain.ErrEmailAlreadyExists
 		}
 		return err
@@ -57,7 +64,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*domain
 func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
 	result := r.db.WithContext(ctx).Save(user)
 	if result.Error != nil {
-		if strings.Contains(result.Error.Error(), "idx_users_email") || strings.Contains(result.Error.Error(), "duplicate key") {
+		if isUniqueViolation(result.Error) {
 			return domain.ErrEmailAlreadyExists
 		}
 		return result.Error
