@@ -9,66 +9,44 @@ Go backend for the **Ticket Box** system, built with [Gin Web Framework](https:/
 ```
 apps/be/
 ├── cmd/
-│   ├── api/
-│   │   └── main.go                 # Application entry point (Composition Root, DI wiring, graceful shutdown)
-│   └── migrate/
-│       └── main.go                 # Goose Versioned Database Migration CLI (up, down, status, reset)
+│   ├── api/main.go                 # Application entry point (Composition Root, DI wiring, graceful shutdown)
+│   └── migrate/main.go             # Goose Versioned Database Migration CLI (up, down, status, reset)
 ├── docs/                           # Auto-generated OpenAPI / Swagger specs (docs.go, swagger.json, swagger.yaml)
-├── internal/                       # Private application code (Go compiler protected)
-│   ├── admin/                      # GoAdmin web panel setup & model table generators
-│   │   ├── admin.go
-│   │   ├── admin_test.go
-│   │   ├── schema.go
-│   │   ├── schema.sql
-│   │   └── tables.go
+├── internal/                       # Private application code
+│   ├── admin/                      # GoAdmin web panel setup & entity table generators (tickets, users)
 │   ├── config/                     # Type-safe configuration loader (caarlos0/env)
-│   │   ├── config.go
-│   │   └── config_test.go
-│   ├── domain/                     # Core domain entities, errors, and interface contracts
-│   │   ├── errors.go
-│   │   ├── ticket.go
-│   │   └── ticket_test.go
-│   ├── handler/                    # Transport layer (HTTP / Gin controllers)
-│   │   └── http/
-│   │       ├── health_handler.go
-│   │       ├── health_handler_test.go
-│   │       ├── router.go
-│   │       ├── router_test.go
-│   │       ├── ticket_dto.go
-│   │       ├── ticket_handler.go
-│   │       └── ticket_handler_test.go
-│   ├── middleware/                 # Gin HTTP middlewares (CORS, Request ID, Slog Logger, Recovery)
-│   │   ├── cors.go
-│   │   ├── cors_test.go
-│   │   ├── logger.go
-│   │   ├── logger_test.go
-│   │   ├── request_id.go
-│   │   └── request_id_test.go
-│   ├── pkg/                        # Shared libraries and packages
-│   │   ├── database/               # Database connection, Goose migration runner, and teardown
-│   │   ├── logger/                 # Structured logging with Go log/slog and context tracing
-│   │   ├── response/               # Standardized JSON response envelope & pagination
-│   │   ├── testutil/               # Test isolation DB helpers (transaction rollback)
-│   │   └── validator/              # Custom validation tags for Gin (notblank)
-│   ├── repository/                 # Data access layer (PostgreSQL GORM implementations)
-│   │   └── postgres/
-│   │       ├── ticket_repo.go
-│   │       └── ticket_repo_test.go
-│   └── service/                    # Business logic and use-cases layer
-│       ├── ticket_service.go
-│       └── ticket_service_test.go
-├── migrations/                     # SQL Goose Versioned Migration files (*.sql)
-│   ├── 00001_create_tickets_table.sql
-│   └── migrations.go               # EmbedFS wrapper for compiled binaries
-├── .dockerignore                   # Docker build ignore rules
-├── .env.example                    # Sample environment variables
-├── .golangci.yml                   # Linter configuration (golangci-lint)
+│   ├── domain/                     # Core domain entities, errors, and interface contracts (e.g. ticket, user)
+│   ├── handler/http/               # HTTP controllers & DTOs (e.g. auth_handler, ticket_handler)
+│   ├── middleware/                 # Gin HTTP middlewares (Auth/JWT, CORS, Request ID, Slog Logger)
+│   ├── pkg/                        # Shared packages (token/jwt, hasher, database, response, validator)
+│   ├── repository/postgres/        # PostgreSQL data access layer via GORM (e.g. user_repo, ticket_repo)
+│   └── service/                    # Business logic layer (e.g. auth_service, ticket_service)
+├── migrations/                     # SQL Goose Versioned Migration files (e.g. 00001_*.sql, 00002_*.sql)
 ├── Dockerfile                      # Multi-stage production container build
-├── Makefile                        # Common developer task automation
-├── go.mod                          # Go module definitions
-├── go.sum                          # Go module checksums
+├── Makefile                        # Developer task automation
 └── README.md
 ```
+
+---
+
+## 🔐 Authentication & API Endpoints
+
+The API uses **JWT (JSON Web Tokens)** via `golang-jwt/jwt/v5` and **Bcrypt** password hashing.
+
+### Public Auth Endpoints
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/auth/register` | Register a new user account |
+| `POST` | `/api/v1/auth/login` | Log in and receive Access + Refresh JWT tokens |
+| `POST` | `/api/v1/auth/refresh` | Exchange valid Refresh Token for a new token pair |
+| `POST` | `/api/v1/auth/forgot-password` | Request password reset link/token (Anti-enumeration protected) |
+| `POST` | `/api/v1/auth/reset-password` | Reset password using single-use reset token |
+
+### Protected Endpoints (Requires `Authorization: Bearer <token>`)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/users/me` | Get current authenticated user profile |
+| `GET` | `/api/v1/tickets` | List public tickets (Paginated) |
 
 ---
 
