@@ -1,4 +1,3 @@
--- GoAdmin Official PostgreSQL Schema
 CREATE TABLE IF NOT EXISTS goadmin_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
@@ -99,7 +98,6 @@ CREATE TABLE IF NOT EXISTS goadmin_site (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed Default GoAdmin Roles & Permissions
 INSERT INTO goadmin_roles (id, name, slug)
 VALUES (1, 'Administrator', 'administrator'), (2, 'Operator', 'operator')
 ON CONFLICT (id) DO NOTHING;
