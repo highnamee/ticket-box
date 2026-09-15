@@ -81,7 +81,7 @@ func (s *AuthService) generateAuthTokens(user *domain.User) (*domain.AuthTokens,
 func (s *AuthService) Register(ctx context.Context, email, password, fullName string) (*domain.User, *domain.AuthTokens, error) {
 	cleanEmail := strings.TrimSpace(email)
 	if cleanEmail == "" || password == "" || strings.TrimSpace(fullName) == "" {
-		return nil, nil, domain.ErrInvalidCredentials
+		return nil, nil, domain.ErrInvalidInput
 	}
 
 	// Check existing user

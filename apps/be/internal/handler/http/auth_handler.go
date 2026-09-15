@@ -44,7 +44,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			response.Error(c, http.StatusConflict, "Email is already registered", err)
 			return
 		}
-		if errors.Is(err, domain.ErrInvalidCredentials) {
+		if errors.Is(err, domain.ErrInvalidInput) {
 			response.BadRequest(c, "Invalid input data", err)
 			return
 		}

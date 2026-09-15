@@ -21,5 +21,6 @@ var (
 	ErrUnauthorized         = errors.New("unauthorized")
 	ErrForbidden            = errors.New("forbidden")
 	ErrInvalidRefreshToken  = errors.New("invalid refresh token")
+	ErrInvalidInput         = errors.New("invalid input")
 )
 
