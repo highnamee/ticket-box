@@ -69,3 +69,71 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 
 	return
 }
+
+// GetUserTable returns the table definition for User model management
+func GetUserTable(ctx *context.Context) (userTable table.Table) {
+	userTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql"))
+
+	info := userTable.GetInfo().SetFilterFormLayout(form.LayoutTwoCol)
+	info.AddField("ID", "id", db.UUID).
+		FieldSortable().
+		FieldCopyable()
+	info.AddField("Email", "email", db.Varchar).
+		FieldSortable().
+		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
+	info.AddField("Full Name", "full_name", db.Varchar).
+		FieldSortable().
+		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
+	info.AddField("Role", "role", db.Varchar).
+		FieldSortable().
+		FieldFilterable(types.FilterType{FormType: form.SelectSingle}).
+		FieldFilterOptions(types.FieldOptions{
+			{Value: "USER", Text: "USER"},
+			{Value: "ADMIN", Text: "ADMIN"},
+		})
+	info.AddField("Status", "status", db.Varchar).
+		FieldSortable().
+		FieldFilterable(types.FilterType{FormType: form.SelectSingle}).
+		FieldFilterOptions(types.FieldOptions{
+			{Value: "ACTIVE", Text: "ACTIVE"},
+			{Value: "INACTIVE", Text: "INACTIVE"},
+			{Value: "BANNED", Text: "BANNED"},
+		})
+	info.AddField("Created At", "created_at", db.Timestamp).
+		FieldSortable()
+	info.AddField("Updated At", "updated_at", db.Timestamp).
+		FieldSortable()
+
+	info.SetTable("users").
+		SetTitle("Users").
+		SetDescription("Manage Platform Users and Roles")
+
+	formList := userTable.GetForm()
+	formList.AddField("ID", "id", db.UUID, form.Text).
+		FieldDisableWhenCreate().
+		FieldDisableWhenUpdate()
+	formList.AddField("Email", "email", db.Varchar, form.Email).
+		FieldMust()
+	formList.AddField("Full Name", "full_name", db.Varchar, form.Text).
+		FieldMust()
+	formList.AddField("Role", "role", db.Varchar, form.SelectSingle).
+		FieldOptions(types.FieldOptions{
+			{Value: "USER", Text: "USER"},
+			{Value: "ADMIN", Text: "ADMIN"},
+		}).
+		FieldDefault("USER")
+	formList.AddField("Status", "status", db.Varchar, form.SelectSingle).
+		FieldOptions(types.FieldOptions{
+			{Value: "ACTIVE", Text: "ACTIVE"},
+			{Value: "INACTIVE", Text: "INACTIVE"},
+			{Value: "BANNED", Text: "BANNED"},
+		}).
+		FieldDefault("ACTIVE")
+
+	formList.SetTable("users").
+		SetTitle("User Details").
+		SetDescription("View and update user status and role")
+
+	return
+}
+

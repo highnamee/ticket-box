@@ -16,50 +16,23 @@ apps/be/
 ├── docs/                           # Auto-generated OpenAPI / Swagger specs (docs.go, swagger.json, swagger.yaml)
 ├── internal/                       # Private application code (Go compiler protected)
 │   ├── admin/                      # GoAdmin web panel setup & model table generators
-│   │   ├── admin.go
-│   │   ├── admin_test.go
-│   │   ├── schema.go
-│   │   ├── schema.sql
-│   │   └── tables.go
 │   ├── config/                     # Type-safe configuration loader (caarlos0/env)
-│   │   ├── config.go
-│   │   └── config_test.go
 │   ├── domain/                     # Core domain entities, errors, and interface contracts
-│   │   ├── errors.go
-│   │   ├── ticket.go
-│   │   └── ticket_test.go
 │   ├── handler/                    # Transport layer (HTTP / Gin controllers)
 │   │   └── http/
-│   │       ├── health_handler.go
-│   │       ├── health_handler_test.go
-│   │       ├── router.go
-│   │       ├── router_test.go
-│   │       ├── ticket_dto.go
-│   │       ├── ticket_handler.go
-│   │       └── ticket_handler_test.go
-│   ├── middleware/                 # Gin HTTP middlewares (CORS, Request ID, Slog Logger, Recovery)
-│   │   ├── cors.go
-│   │   ├── cors_test.go
-│   │   ├── logger.go
-│   │   ├── logger_test.go
-│   │   ├── request_id.go
-│   │   └── request_id_test.go
+│   ├── middleware/                 # Gin HTTP middlewares (Auth/JWT, CORS, Request ID, Slog Logger, Recovery)
 │   ├── pkg/                        # Shared libraries and packages
 │   │   ├── database/               # Database connection, Goose migration runner, and teardown
+│   │   ├── hasher/                 # Bcrypt password hashing & secure random token generation
 │   │   ├── logger/                 # Structured logging with Go log/slog and context tracing
 │   │   ├── response/               # Standardized JSON response envelope & pagination
 │   │   ├── testutil/               # Test isolation DB helpers (transaction rollback)
+│   │   ├── token/                  # JWT creation & verification (golang-jwt/jwt/v5)
 │   │   └── validator/              # Custom validation tags for Gin (notblank)
 │   ├── repository/                 # Data access layer (PostgreSQL GORM implementations)
 │   │   └── postgres/
-│   │       ├── ticket_repo.go
-│   │       └── ticket_repo_test.go
 │   └── service/                    # Business logic and use-cases layer
-│       ├── ticket_service.go
-│       └── ticket_service_test.go
 ├── migrations/                     # SQL Goose Versioned Migration files (*.sql)
-│   ├── 00001_create_tickets_table.sql
-│   └── migrations.go               # EmbedFS wrapper for compiled binaries
 ├── .dockerignore                   # Docker build ignore rules
 ├── .env.example                    # Sample environment variables
 ├── .golangci.yml                   # Linter configuration (golangci-lint)

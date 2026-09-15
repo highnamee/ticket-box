@@ -15,6 +15,7 @@ import (
 	httpHandler "ticket-box-be/internal/handler/http"
 	"ticket-box-be/internal/pkg/database"
 	"ticket-box-be/internal/pkg/logger"
+	"ticket-box-be/internal/pkg/token"
 	"ticket-box-be/internal/repository/postgres"
 	"ticket-box-be/internal/service"
 )
@@ -28,6 +29,11 @@ import (
 // @schemes                    http https
 // @produce                    json
 // @consume                    json
+//
+// @securityDefinitions.apikey BearerAuth
+// @in                         header
+// @name                       Authorization
+// @description                Type 'Bearer ' followed by your JWT access token.
 
 func main() {
 	// 1. Load Configuration
@@ -43,28 +49,41 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 4. Initialize Repositories
+	// 4. Initialize JWT Token Maker
+	tokenMaker, err := token.NewJWTMaker(cfg.JWT.Secret)
+	if err != nil {
+		slog.Error("Failed to initialize JWT maker", "error", err)
+		os.Exit(1)
+	}
+
+	// 5. Initialize Repositories
 	ticketRepo := postgres.NewTicketRepository(db)
+	userRepo := postgres.NewUserRepository(db)
+	resetRepo := postgres.NewPasswordResetRepository(db)
 
-	// 5. Initialize Services
+	// 6. Initialize Services
 	ticketService := service.NewTicketService(ticketRepo)
+	authService := service.NewAuthService(userRepo, resetRepo, tokenMaker, cfg.JWT.AccessTokenTTL, cfg.JWT.RefreshTokenTTL)
 
-	// 6. Initialize Handlers
+	// 7. Initialize Handlers
 	healthHandler := httpHandler.NewHealthHandler()
 	ticketHandler := httpHandler.NewTicketHandler(ticketService)
+	authHandler := httpHandler.NewAuthHandler(authService)
 
-	// 7. Setup Router
+	// 8. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
 		AppConfig:          cfg,
 		AppEnv:             cfg.AppEnv,
 		HealthHandler:      healthHandler,
 		TicketHandler:      ticketHandler,
+		AuthHandler:        authHandler,
+		TokenMaker:         tokenMaker,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
 		EnableAdmin:        cfg.EnableAdmin,
 		DB:                 db,
 	})
 
-	// 8. Configure HTTP Server
+	// 9. Configure HTTP Server
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
 		Handler:      router,
