@@ -15,6 +15,7 @@ import (
 	httpHandler "ticket-box-be/internal/handler/http"
 	"ticket-box-be/internal/pkg/database"
 	"ticket-box-be/internal/pkg/logger"
+	"ticket-box-be/internal/pkg/token"
 	"ticket-box-be/internal/repository/postgres"
 	"ticket-box-be/internal/service"
 )
