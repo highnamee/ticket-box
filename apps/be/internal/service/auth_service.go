@@ -127,12 +127,13 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 		return nil, nil, err
 	}
 
-	if !hasher.CheckPassword(password, user.PasswordHash) {
-		return nil, nil, domain.ErrInvalidCredentials
-	}
-
+	// Check account status before running expensive bcrypt comparison
 	if user.Status != domain.StatusActive {
 		return nil, nil, domain.ErrUserInactive
+	}
+
+	if !hasher.CheckPassword(password, user.PasswordHash) {
+		return nil, nil, domain.ErrInvalidCredentials
 	}
 
 	tokens, err := s.generateAuthTokens(user)
