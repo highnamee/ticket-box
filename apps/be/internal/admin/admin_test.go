@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"ticket-box-be/internal/config"
+	"ticket-box-be/internal/pkg/database"
 	"ticket-box-be/internal/pkg/testutil"
 )
 
@@ -16,13 +17,17 @@ func TestGoAdmin_Routes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	db := testutil.SetupTestDB(t)
-	if db == nil {
-		return
-	}
-
 	cfg := testutil.GetTestConfig(t)
-	err := Mount(r, cfg, db)
+	db, err := database.NewDatabase(cfg)
+	if err != nil {
+		t.Fatalf("Failed to connect to test db: %v", err)
+	}
+	if err := database.MigrateUp(db); err != nil {
+		t.Fatalf("Failed to migrate test db: %v", err)
+	}
+	// We do NOT use a transaction (db.Begin()) here because GoAdmin uses its own connection pool 
+	// based on the DSN and needs to see the schema changes committed globally.
+	err = Mount(r, cfg, db)
 	assert.NoError(t, err)
 
 	for _, route := range r.Routes() {
