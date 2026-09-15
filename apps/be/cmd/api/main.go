@@ -28,6 +28,11 @@ import (
 // @schemes                    http https
 // @produce                    json
 // @consume                    json
+//
+// @securityDefinitions.apikey BearerAuth
+// @in                         header
+// @name                       Authorization
+// @description                Type 'Bearer ' followed by your JWT access token.
 
 func main() {
 	// 1. Load Configuration
@@ -43,22 +48,44 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 4. Initialize Repositories
+	// 4. Initialize JWT Token Maker
+	tokenMaker, err := token.NewJWTMaker(cfg.JWT.Secret)
+	if err != nil {
+		slog.Error("Failed to initialize JWT maker", "error", err)
+		os.Exit(1)
+	}
+
+	accessTTL, err := time.ParseDuration(cfg.JWT.AccessTokenTTL)
+	if err != nil {
+		accessTTL = 15 * time.Minute
+	}
+	refreshTTL, err := time.ParseDuration(cfg.JWT.RefreshTokenTTL)
+	if err != nil {
+		refreshTTL = 7 * 24 * time.Hour
+	}
+
+	// 5. Initialize Repositories
 	ticketRepo := postgres.NewTicketRepository(db)
+	userRepo := postgres.NewUserRepository(db)
+	resetRepo := postgres.NewPasswordResetRepository(db)
 
-	// 5. Initialize Services
+	// 6. Initialize Services
 	ticketService := service.NewTicketService(ticketRepo)
+	authService := service.NewAuthService(userRepo, resetRepo, tokenMaker, accessTTL, refreshTTL)
 
-	// 6. Initialize Handlers
+	// 7. Initialize Handlers
 	healthHandler := httpHandler.NewHealthHandler()
 	ticketHandler := httpHandler.NewTicketHandler(ticketService)
+	authHandler := httpHandler.NewAuthHandler(authService)
 
-	// 7. Setup Router
+	// 8. Setup Router
 	router := httpHandler.NewRouter(httpHandler.RouterConfig{
 		AppConfig:          cfg,
 		AppEnv:             cfg.AppEnv,
 		HealthHandler:      healthHandler,
 		TicketHandler:      ticketHandler,
+		AuthHandler:        authHandler,
+		TokenMaker:         tokenMaker,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
 		EnableAdmin:        cfg.EnableAdmin,
 		DB:                 db,

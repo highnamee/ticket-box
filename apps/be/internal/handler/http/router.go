@@ -7,6 +7,7 @@ import (
 	"ticket-box-be/internal/admin"
 	"ticket-box-be/internal/config"
 	"ticket-box-be/internal/middleware"
+	"ticket-box-be/internal/pkg/token"
 	"ticket-box-be/internal/pkg/validator"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +21,8 @@ type RouterConfig struct {
 	AppEnv             string
 	HealthHandler      *HealthHandler
 	TicketHandler      *TicketHandler
+	AuthHandler        *AuthHandler
+	TokenMaker         token.Maker
 	CORSAllowedOrigins []string
 	EnableAdmin        bool
 	DB                 *gorm.DB
@@ -72,6 +75,24 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 		}
 		if cfg.TicketHandler != nil {
 			v1.GET("/tickets", cfg.TicketHandler.GetPublicTickets)
+		}
+		if cfg.AuthHandler != nil {
+			authGroup := v1.Group("/auth")
+			{
+				authGroup.POST("/register", cfg.AuthHandler.Register)
+				authGroup.POST("/login", cfg.AuthHandler.Login)
+				authGroup.POST("/refresh", cfg.AuthHandler.RefreshToken)
+				authGroup.POST("/forgot-password", cfg.AuthHandler.ForgotPassword)
+				authGroup.POST("/reset-password", cfg.AuthHandler.ResetPassword)
+			}
+
+			if cfg.TokenMaker != nil {
+				userGroup := v1.Group("/users")
+				userGroup.Use(middleware.AuthMiddleware(cfg.TokenMaker))
+				{
+					userGroup.GET("/me", cfg.AuthHandler.GetMe)
+				}
+			}
 		}
 	}
 
