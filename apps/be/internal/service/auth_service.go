@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const passwordResetTTL = 15 * time.Minute
+
 type AuthService struct {
 	userRepo   domain.UserRepository
 	resetRepo  domain.PasswordResetRepository
@@ -185,7 +187,7 @@ func (s *AuthService) ForgotPassword(ctx context.Context, email string) (string,
 	reset := &domain.PasswordReset{
 		UserID:    user.ID,
 		TokenHash: tokenHash,
-		ExpiresAt: time.Now().Add(15 * time.Minute),
+		ExpiresAt: time.Now().Add(passwordResetTTL),
 	}
 
 	if err := s.resetRepo.Create(ctx, reset); err != nil {
