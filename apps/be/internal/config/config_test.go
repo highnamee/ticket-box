@@ -28,7 +28,7 @@ func TestLoad_DefaultValues(t *testing.T) {
 	assert.Equal(t, "localhost", cfg.DB.Host)
 	assert.Equal(t, "ticketbox_db", cfg.DB.DBName)
 	assert.Empty(t, cfg.CORS.AllowedOrigins)
-	assert.Equal(t, "default_insecure_jwt_secret_change_in_production", cfg.JWT.Secret)
+	assert.Empty(t, cfg.JWT.Secret) // No default — must be supplied via JWT_SECRET env var
 	assert.Equal(t, "15m", cfg.JWT.AccessTokenTTL)
 	assert.Equal(t, "168h", cfg.JWT.RefreshTokenTTL)
 }
@@ -43,6 +43,7 @@ func TestLoad_CustomEnvValues(t *testing.T) {
 	t.Setenv("DB_PORT", "5433")
 	t.Setenv("DB_NAME", "production_db")
 	t.Setenv("CORS_ALLOWED_ORIGINS", "https://ticketbox.com, https://admin.ticketbox.com")
+	t.Setenv("JWT_SECRET", "super-secret-key-for-production-use-only-32chars")
 
 	cfg := Load()
 
