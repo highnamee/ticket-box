@@ -92,7 +92,7 @@ func main() {
 		DB:                 db,
 	})
 
-	// 8. Configure HTTP Server
+	// 9. Configure HTTP Server
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
 		Handler:      router,
