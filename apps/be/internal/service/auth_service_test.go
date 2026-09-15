@@ -31,7 +31,7 @@ func (m *MockUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*domai
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.User), args.Error(1)
+	return args.Get(0).(*domain.User), args.Error(1) //nolint:errcheck
 }
 
 func (m *MockUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
@@ -39,7 +39,7 @@ func (m *MockUserRepository) FindByEmail(ctx context.Context, email string) (*do
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.User), args.Error(1)
+	return args.Get(0).(*domain.User), args.Error(1) //nolint:errcheck
 }
 
 func (m *MockUserRepository) Update(ctx context.Context, user *domain.User) error {
@@ -67,7 +67,7 @@ func (m *MockPasswordResetRepository) FindByTokenHash(ctx context.Context, token
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.PasswordReset), args.Error(1)
+	return args.Get(0).(*domain.PasswordReset), args.Error(1) //nolint:errcheck
 }
 
 func (m *MockPasswordResetRepository) MarkAsUsed(ctx context.Context, id uuid.UUID) error {

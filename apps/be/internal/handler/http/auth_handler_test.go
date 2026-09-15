@@ -29,11 +29,11 @@ func (m *MockAuthService) Register(ctx context.Context, email, password, fullNam
 	args := m.Called(ctx, email, password, fullName)
 	var user *domain.User
 	if args.Get(0) != nil {
-		user = args.Get(0).(*domain.User)
+		user = args.Get(0).(*domain.User) //nolint:errcheck
 	}
 	var tokens *domain.AuthTokens
 	if args.Get(1) != nil {
-		tokens = args.Get(1).(*domain.AuthTokens)
+		tokens = args.Get(1).(*domain.AuthTokens) //nolint:errcheck
 	}
 	return user, tokens, args.Error(2)
 }
@@ -42,11 +42,11 @@ func (m *MockAuthService) Login(ctx context.Context, email, password string) (*d
 	args := m.Called(ctx, email, password)
 	var user *domain.User
 	if args.Get(0) != nil {
-		user = args.Get(0).(*domain.User)
+		user = args.Get(0).(*domain.User) //nolint:errcheck
 	}
 	var tokens *domain.AuthTokens
 	if args.Get(1) != nil {
-		tokens = args.Get(1).(*domain.AuthTokens)
+		tokens = args.Get(1).(*domain.AuthTokens) //nolint:errcheck
 	}
 	return user, tokens, args.Error(2)
 }
@@ -55,7 +55,7 @@ func (m *MockAuthService) RefreshToken(ctx context.Context, refreshToken string)
 	args := m.Called(ctx, refreshToken)
 	var tokens *domain.AuthTokens
 	if args.Get(0) != nil {
-		tokens = args.Get(0).(*domain.AuthTokens)
+		tokens = args.Get(0).(*domain.AuthTokens) //nolint:errcheck
 	}
 	return tokens, args.Error(1)
 }
@@ -74,7 +74,7 @@ func (m *MockAuthService) GetMe(ctx context.Context, userID uuid.UUID) (*domain.
 	args := m.Called(ctx, userID)
 	var user *domain.User
 	if args.Get(0) != nil {
-		user = args.Get(0).(*domain.User)
+		user = args.Get(0).(*domain.User) //nolint:errcheck
 	}
 	return user, args.Error(1)
 }
