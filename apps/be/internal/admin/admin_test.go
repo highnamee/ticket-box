@@ -25,7 +25,7 @@ func TestGoAdmin_Routes(t *testing.T) {
 	if err := database.MigrateUp(db); err != nil {
 		t.Fatalf("Failed to migrate test db: %v", err)
 	}
-	// We do NOT use a transaction (db.Begin()) here because GoAdmin uses its own connection pool 
+	// We do NOT use a transaction (db.Begin()) here because GoAdmin uses its own connection pool
 	// based on the DSN and needs to see the schema changes committed globally.
 	err = Mount(r, cfg, db)
 	assert.NoError(t, err)

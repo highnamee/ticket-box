@@ -136,4 +136,3 @@ func GetUserTable(ctx *context.Context) (userTable table.Table) {
 
 	return
 }
-

@@ -21,9 +21,9 @@ const (
 )
 
 type Config struct {
-	AppEnv      string         `env:"APP_ENV" envDefault:"development"`
-	Port        string         `env:"PORT" envDefault:"8080"`
-	EnableAdmin bool           `env:"ENABLE_ADMIN" envDefault:"true"`
+	AppEnv      string `env:"APP_ENV" envDefault:"development"`
+	Port        string `env:"PORT" envDefault:"8080"`
+	EnableAdmin bool   `env:"ENABLE_ADMIN" envDefault:"true"`
 	Admin       AdminConfig
 	DB          DatabaseConfig
 	CORS        CORSConfig
@@ -100,4 +100,3 @@ func Load() *Config {
 
 	return &cfg
 }
-

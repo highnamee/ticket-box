@@ -91,10 +91,10 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	type PaginatedTicketResponse struct {
-		Success bool `json:"success"`
+		Success bool   `json:"success"`
 		Message string `json:"message"`
-		Data struct {
-			Items []PublicTicketResponse `json:"items"`
+		Data    struct {
+			Items      []PublicTicketResponse  `json:"items"`
 			Pagination response.PaginationMeta `json:"pagination"`
 		} `json:"data"`
 		Error interface{} `json:"error"`

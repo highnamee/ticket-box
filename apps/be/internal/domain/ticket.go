@@ -63,4 +63,3 @@ type TicketService interface {
 	GetPublicTickets(ctx context.Context, page, limit int) ([]Ticket, int64, error)
 	GetTicketByID(ctx context.Context, id uuid.UUID) (*Ticket, error)
 }
-
