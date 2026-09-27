@@ -23,7 +23,7 @@ type BookingResponse struct {
 	TotalAmount float64              `json:"total_amount"`
 	Status      domain.BookingStatus `json:"status"`
 	CreatedAt   time.Time            `json:"created_at"`
-	TicketName  string               `json:"ticket_name,omitempty"`
+	TicketName  string               `json:"ticket_name"`
 }
 
 func toBookingResponse(b *domain.Booking) BookingResponse {
