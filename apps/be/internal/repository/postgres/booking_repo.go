@@ -40,12 +40,12 @@ func (r *BookingRepository) CreateBookingWithLock(ctx context.Context, userID, t
 			return err
 		}
 
-		// 2. Validate ticket status
+		// 2. Validate ticket status (INACTIVE is a hidden system status, treated as not found)
 		if ticket.Status != domain.TicketStatusActive {
 			if ticket.Status == domain.TicketStatusSoldOut {
 				return domain.ErrTicketSoldOut
 			}
-			return domain.ErrTicketInactive
+			return domain.ErrTicketNotFound
 		}
 
 		// 3. Check available stock

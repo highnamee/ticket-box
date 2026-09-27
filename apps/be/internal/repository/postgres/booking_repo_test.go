@@ -96,6 +96,21 @@ func TestBookingRepository_CreateBookingWithLock(t *testing.T) {
 		assert.Nil(t, booking)
 	})
 
+	t.Run("booking inactive ticket returns ErrTicketNotFound", func(t *testing.T) {
+		inactiveTicket := &domain.Ticket{
+			Name:           "Inactive Draft Ticket",
+			Price:          100.0,
+			TotalQuantity:  5,
+			AvailableStock: 5,
+			Status:         domain.TicketStatusInactive,
+		}
+		require.NoError(t, ticketRepo.Create(ctx, inactiveTicket))
+
+		booking, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, inactiveTicket.ID, 1)
+		assert.ErrorIs(t, err, domain.ErrTicketNotFound)
+		assert.Nil(t, booking)
+	})
+
 	t.Run("booking invalid quantity returns ErrInvalidQuantity", func(t *testing.T) {
 		booking, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, ticket.ID, 0)
 		assert.ErrorIs(t, err, domain.ErrInvalidQuantity)

@@ -65,8 +65,6 @@ func (h *BookingHandler) BookTicket(c *gin.Context) {
 			response.Error(c, http.StatusConflict, "Ticket is sold out", err.Error())
 		case errors.Is(err, domain.ErrInsufficientStock):
 			response.Error(c, http.StatusConflict, "Insufficient ticket stock available", err.Error())
-		case errors.Is(err, domain.ErrTicketInactive):
-			response.BadRequest(c, "Ticket is not currently active for booking", err.Error())
 		case errors.Is(err, domain.ErrInvalidQuantity):
 			response.BadRequest(c, "Invalid ticket quantity requested", err.Error())
 		case errors.Is(err, domain.ErrUnauthorized):
