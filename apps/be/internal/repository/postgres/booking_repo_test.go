@@ -221,8 +221,8 @@ func TestBookingRepository_ConcurrentBooking(t *testing.T) {
 		_ = db.Exec("DELETE FROM tickets WHERE id = ?", ticket.ID).Error
 	})
 
-	// 3. Launch 50 concurrent goroutines, each attempting to book 1 ticket
-	concurrentRequests := 50
+	// 3. Launch 100 concurrent goroutines, each attempting to book 1 ticket
+	concurrentRequests := 100
 	var wg sync.WaitGroup
 	var successCount int32
 	var failedCount int32
