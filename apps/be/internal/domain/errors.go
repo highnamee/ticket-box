@@ -9,6 +9,8 @@ var (
 	ErrInsufficientStock = errors.New("insufficient ticket stock")
 	ErrInvalidQuantity   = errors.New("invalid quantity requested")
 	ErrInvalidPagination = errors.New("invalid pagination parameters")
+	ErrTicketInactive    = errors.New("ticket is not active for booking")
+	ErrBookingNotFound   = errors.New("booking not found")
 
 	// Authentication & User domain errors
 	ErrUserNotFound        = errors.New("user not found")

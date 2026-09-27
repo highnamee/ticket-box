@@ -58,16 +58,19 @@ func main() {
 
 	// 5. Initialize Repositories
 	ticketRepo := postgres.NewTicketRepository(db)
+	bookingRepo := postgres.NewBookingRepository(db)
 	userRepo := postgres.NewUserRepository(db)
 	resetRepo := postgres.NewPasswordResetRepository(db)
 
 	// 6. Initialize Services
 	ticketService := service.NewTicketService(ticketRepo)
+	bookingService := service.NewBookingService(bookingRepo)
 	authService := service.NewAuthService(userRepo, resetRepo, tokenMaker, cfg.JWT.AccessTokenTTL, cfg.JWT.RefreshTokenTTL)
 
 	// 7. Initialize Handlers
 	healthHandler := httpHandler.NewHealthHandler()
 	ticketHandler := httpHandler.NewTicketHandler(ticketService)
+	bookingHandler := httpHandler.NewBookingHandler(bookingService)
 	authHandler := httpHandler.NewAuthHandler(authService)
 
 	// 8. Setup Router
@@ -76,6 +79,7 @@ func main() {
 		AppEnv:             cfg.AppEnv,
 		HealthHandler:      healthHandler,
 		TicketHandler:      ticketHandler,
+		BookingHandler:     bookingHandler,
 		AuthHandler:        authHandler,
 		TokenMaker:         tokenMaker,
 		CORSAllowedOrigins: cfg.CORS.AllowedOrigins,
