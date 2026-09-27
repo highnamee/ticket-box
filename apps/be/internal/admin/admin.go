@@ -30,6 +30,7 @@ const (
 // Generators maps table names to their GoAdmin table generators
 var Generators = admTable.GeneratorList{
 	"tickets": GetTicketTable,
+	"users":   GetUserTable,
 }
 
 // Mount initializes and attaches the GoAdmin engine to the Gin router

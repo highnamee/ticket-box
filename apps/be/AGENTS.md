@@ -109,6 +109,29 @@ Follow the established layered pattern strictly:
 
 ---
 
+## 🔐 Authentication & Security Guidelines
+
+1. **Password Hashing**:
+   - Always hash passwords with `hasher.HashPassword` (Bcrypt default cost). Never store plaintext passwords or log them.
+   - Never serialize `PasswordHash` to JSON (use `json:"-"` and dedicated Response DTOs).
+
+2. **JWT Tokens (`internal/pkg/token`)**:
+   - Use `token.Maker` (`golang-jwt/jwt/v5`) for token creation and verification.
+   - Secret key must be at least 32 characters long.
+   - Access tokens have short TTLs (`15m`), while Refresh tokens have longer TTLs (`7d`).
+   - Protect private endpoints by applying `middleware.AuthMiddleware(tokenMaker)`.
+   - Access authenticated user info inside handlers via helpers:
+     - `middleware.GetAuthUserID(c)`
+     - `middleware.GetAuthUserEmail(c)`
+     - `middleware.GetAuthUserRole(c)`
+
+3. **Password Reset Flow**:
+   - Single-use, time-limited (`15m`) tokens generated via `crypto/rand`.
+   - Only store **SHA-256 hash** of the reset token in the database, never the raw token.
+   - For `/auth/forgot-password`, always return a generic success message to prevent user enumeration attacks.
+
+---
+
 ## 🛠️ Admin Panel (`internal/admin/`)
 
 - GoAdmin web interface is mounted at `/admin` (accessible with `admin` / `admin`).
