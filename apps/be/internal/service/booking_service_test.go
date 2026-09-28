@@ -24,7 +24,8 @@ func (m *MockBookingRepository) CreateBookingWithLock(ctx context.Context, userI
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.Booking), args.Error(1)
+	booking, _ := args.Get(0).(*domain.Booking)
+	return booking, args.Error(1)
 }
 
 func (m *MockBookingRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Booking, error) {
@@ -32,15 +33,18 @@ func (m *MockBookingRepository) FindByID(ctx context.Context, id uuid.UUID) (*do
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.Booking), args.Error(1)
+	booking, _ := args.Get(0).(*domain.Booking)
+	return booking, args.Error(1)
 }
 
 func (m *MockBookingRepository) FindByUserID(ctx context.Context, userID uuid.UUID, page, limit int) ([]domain.Booking, int64, error) {
 	args := m.Called(ctx, userID, page, limit)
+	total, _ := args.Get(1).(int64)
 	if args.Get(0) == nil {
-		return nil, args.Get(1).(int64), args.Error(2)
+		return nil, total, args.Error(2)
 	}
-	return args.Get(0).([]domain.Booking), args.Get(1).(int64), args.Error(2)
+	bookings, _ := args.Get(0).([]domain.Booking)
+	return bookings, total, args.Error(2)
 }
 
 func TestBookingService_BookTicket(t *testing.T) {

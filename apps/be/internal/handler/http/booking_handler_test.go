@@ -24,12 +24,15 @@ type MockBookingService struct {
 	mock.Mock
 }
 
+const validSingleQtyPayload = `{"quantity": 1}`
+
 func (m *MockBookingService) BookTicket(ctx context.Context, userID, ticketID uuid.UUID, quantity int) (*domain.Booking, error) {
 	args := m.Called(ctx, userID, ticketID, quantity)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.Booking), args.Error(1)
+	booking, _ := args.Get(0).(*domain.Booking)
+	return booking, args.Error(1)
 }
 
 func (m *MockBookingService) GetBookingByID(ctx context.Context, userID, bookingID uuid.UUID) (*domain.Booking, error) {
@@ -37,15 +40,18 @@ func (m *MockBookingService) GetBookingByID(ctx context.Context, userID, booking
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*domain.Booking), args.Error(1)
+	booking, _ := args.Get(0).(*domain.Booking)
+	return booking, args.Error(1)
 }
 
 func (m *MockBookingService) GetUserBookings(ctx context.Context, userID uuid.UUID, page, limit int) ([]domain.Booking, int64, error) {
 	args := m.Called(ctx, userID, page, limit)
+	total, _ := args.Get(1).(int64)
 	if args.Get(0) == nil {
-		return nil, args.Get(1).(int64), args.Error(2)
+		return nil, total, args.Error(2)
 	}
-	return args.Get(0).([]domain.Booking), args.Get(1).(int64), args.Error(2)
+	bookings, _ := args.Get(0).([]domain.Booking)
+	return bookings, total, args.Error(2)
 }
 
 type SingleBookingResponse struct {
@@ -117,7 +123,7 @@ func TestBookingHandler_BookTicket(t *testing.T) {
 		handler := NewBookingHandler(mockService)
 		router := setupBookingTestRouter(handler, &userID)
 
-		reqBody := `{"quantity": 1}`
+		reqBody := validSingleQtyPayload
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodPost, "/api/v1/tickets/not-a-uuid/book", bytes.NewBufferString(reqBody))
 		req.Header.Set("Content-Type", "application/json")
@@ -145,7 +151,7 @@ func TestBookingHandler_BookTicket(t *testing.T) {
 		handler := NewBookingHandler(mockService)
 		router := setupBookingTestRouter(handler, nil) // no auth
 
-		reqBody := `{"quantity": 1}`
+		reqBody := validSingleQtyPayload
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodPost, "/api/v1/tickets/"+ticketID.String()+"/book", bytes.NewBufferString(reqBody))
 		req.Header.Set("Content-Type", "application/json")
@@ -162,7 +168,7 @@ func TestBookingHandler_BookTicket(t *testing.T) {
 		mockService.On("BookTicket", mock.Anything, userID, ticketID, 1).
 			Return(nil, domain.ErrTicketNotFound).Once()
 
-		reqBody := `{"quantity": 1}`
+		reqBody := validSingleQtyPayload
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodPost, "/api/v1/tickets/"+ticketID.String()+"/book", bytes.NewBufferString(reqBody))
 		req.Header.Set("Content-Type", "application/json")
@@ -180,7 +186,7 @@ func TestBookingHandler_BookTicket(t *testing.T) {
 		mockService.On("BookTicket", mock.Anything, userID, ticketID, 1).
 			Return(nil, domain.ErrTicketSoldOut).Once()
 
-		reqBody := `{"quantity": 1}`
+		reqBody := validSingleQtyPayload
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest(http.MethodPost, "/api/v1/tickets/"+ticketID.String()+"/book", bytes.NewBufferString(reqBody))
 		req.Header.Set("Content-Type", "application/json")

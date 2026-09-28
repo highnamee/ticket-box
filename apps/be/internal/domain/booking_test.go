@@ -74,12 +74,12 @@ func TestBooking_BeforeCreate(t *testing.T) {
 
 		booking := domain.Booking{
 			ID:     customID,
-			Status: domain.BookingStatusCancelled,
+			Status: domain.BookingStatusCanceled,
 		}
 
 		err = booking.BeforeCreate(nil)
 		assert.NoError(t, err)
 		assert.Equal(t, customID, booking.ID)
-		assert.Equal(t, domain.BookingStatusCancelled, booking.Status)
+		assert.Equal(t, domain.BookingStatusCanceled, booking.Status)
 	})
 }
