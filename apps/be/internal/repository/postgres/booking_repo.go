@@ -20,7 +20,6 @@ func NewBookingRepository(db *gorm.DB) *BookingRepository {
 
 // CreateBookingWithLock executes ticket booking using an atomic conditional UPDATE and ACID transaction.
 // The atomic UPDATE decrements available_stock only when available_stock >= quantity and status == ACTIVE in a single statement.
-// This holds locks for mere microseconds (drastically cutting lock contention under 10k requests) and fails immediately when out of stock.
 func (r *BookingRepository) CreateBookingWithLock(ctx context.Context, userID, ticketID uuid.UUID, quantity int) (*domain.Booking, error) {
 	if quantity <= 0 {
 		return nil, domain.ErrInvalidQuantity
