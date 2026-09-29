@@ -21,6 +21,7 @@ type RouterConfig struct {
 	AppEnv             string
 	HealthHandler      *HealthHandler
 	TicketHandler      *TicketHandler
+	BookingHandler     *BookingHandler
 	AuthHandler        *AuthHandler
 	TokenMaker         token.Maker
 	CORSAllowedOrigins []string
@@ -76,6 +77,13 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 		if cfg.TicketHandler != nil {
 			v1.GET("/tickets", cfg.TicketHandler.GetPublicTickets)
 		}
+		if cfg.BookingHandler != nil && cfg.TokenMaker != nil {
+			authTicketGroup := v1.Group("/tickets")
+			authTicketGroup.Use(middleware.AuthMiddleware(cfg.TokenMaker))
+			{
+				authTicketGroup.POST("/:id/book", cfg.BookingHandler.BookTicket)
+			}
+		}
 		if cfg.AuthHandler != nil {
 			authGroup := v1.Group("/auth")
 			{
@@ -91,6 +99,9 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 				userGroup.Use(middleware.AuthMiddleware(cfg.TokenMaker))
 				{
 					userGroup.GET("/me", cfg.AuthHandler.GetMe)
+					if cfg.BookingHandler != nil {
+						userGroup.GET("/me/bookings", cfg.BookingHandler.GetMyBookings)
+					}
 				}
 			}
 		}

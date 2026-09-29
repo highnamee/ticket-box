@@ -3,19 +3,12 @@ package database
 import (
 	"fmt"
 	"log/slog"
-	"time"
 
 	"ticket-box-be/internal/config"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-)
-
-const (
-	maxIdleConns    = 10
-	maxOpenConns    = 100
-	connMaxLifetime = time.Hour
 )
 
 // BuildDSN constructs the PostgreSQL connection string
@@ -68,9 +61,10 @@ func NewDatabase(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// Connection pool settings
-	sqlDB.SetMaxIdleConns(maxIdleConns)
-	sqlDB.SetMaxOpenConns(maxOpenConns)
-	sqlDB.SetConnMaxLifetime(connMaxLifetime)
+	sqlDB.SetMaxIdleConns(cfg.DB.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.DB.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(cfg.DB.ConnMaxLifetime)
+	sqlDB.SetConnMaxIdleTime(cfg.DB.ConnMaxIdleTime)
 
 	// Verify database is active and reachable
 	if err := sqlDB.Ping(); err != nil {

@@ -1,5 +1,15 @@
 basePath: /api/v1
 definitions:
+  domain.BookingStatus:
+    enum:
+    - CONFIRMED
+    - CANCELLED
+    - PENDING
+    type: string
+    x-enum-varnames:
+    - BookingStatusConfirmed
+    - BookingStatusCancelled
+    - BookingStatusPending
   domain.UserRole:
     enum:
     - USER
@@ -38,6 +48,36 @@ definitions:
         type: string
       token_type:
         example: Bearer
+        type: string
+    type: object
+  http.BookTicketRequest:
+    properties:
+      quantity:
+        maximum: 100
+        minimum: 1
+        type: integer
+    required:
+    - quantity
+    type: object
+  http.BookingResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      quantity:
+        type: integer
+      status:
+        $ref: '#/definitions/domain.BookingStatus'
+      ticket_id:
+        type: string
+      ticket_name:
+        type: string
+      total_amount:
+        type: number
+      unit_price:
+        type: number
+      user_id:
         type: string
     type: object
   http.ForgotPasswordRequest:
@@ -393,6 +433,61 @@ paths:
       summary: Get public tickets
       tags:
       - Tickets
+  /tickets/{id}/book:
+    post:
+      consumes:
+      - application/json
+      description: Reserve and purchase tickets with concurrency protection against
+        race conditions and overselling
+      parameters:
+      - description: Ticket UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Booking details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/http.BookTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Ticket booked successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/http.BookingResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Ticket not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "409":
+          description: Conflict - ticket sold out or insufficient stock
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Book a ticket
+      tags:
+      - Bookings
   /users/me:
     get:
       description: Fetch profile information for the currently authenticated user
@@ -426,6 +521,50 @@ paths:
       summary: Get current authenticated user profile
       tags:
       - Users
+  /users/me/bookings:
+    get:
+      description: Retrieve all bookings belonging to the currently authenticated
+        user
+      parameters:
+      - default: 1
+        description: Page number (default 1, min 1)
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page (default 10, min 1, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bookings retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PaginatedData'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user's bookings
+      tags:
+      - Bookings
 produces:
 - application/json
 schemes:

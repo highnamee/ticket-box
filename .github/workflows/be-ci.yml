@@ -34,6 +34,16 @@ jobs:
           check-latest: true
           cache-dependency-path: apps/be/go.sum
 
+      - name: Check Code Formatting
+        run: |
+          UNFORMATTED=$(gofmt -s -l .)
+          if [ -n "$UNFORMATTED" ]; then
+            echo "❌ The following files are not formatted properly:"
+            echo "$UNFORMATTED"
+            echo "Please run 'go fmt ./...' to format your code."
+            exit 1
+          fi
+
       - name: Cache golangci-lint Binary
         uses: actions/cache@v4
         id: cache-golangci-lint

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
+	"time"
 
 	"ticket-box-be/internal/config"
 	"ticket-box-be/internal/pkg/database"
@@ -60,12 +61,16 @@ func GetTestConfig(t *testing.T) *config.Config {
 			Password: getEnv("ADMIN_PASSWORD", "admin"),
 		},
 		DB: config.DatabaseConfig{
-			Host:     dbHost,
-			Port:     dbPort,
-			User:     dbUser,
-			Password: dbPassword,
-			DBName:   dbName,
-			SSLMode:  dbSSLMode,
+			Host:            dbHost,
+			Port:            dbPort,
+			User:            dbUser,
+			Password:        dbPassword,
+			DBName:          dbName,
+			SSLMode:         dbSSLMode,
+			MaxOpenConns:    25,
+			MaxIdleConns:    10,
+			ConnMaxLifetime: time.Hour,
+			ConnMaxIdleTime: 5 * time.Minute,
 		},
 	}
 }
