@@ -58,11 +58,37 @@ func TestGoAdmin_Routes(t *testing.T) {
 	// Extract cookie and test authenticated dashboard route
 	cookie := w3.Header().Get("Set-Cookie")
 	if cookie != "" {
+		ticketID := "11111111-2222-3333-4444-555555555555"
+		err = db.Exec("INSERT INTO tickets (id, name, price, total_quantity, available_stock, status) VALUES (?, 'VIP Concert', 150.00, 100, 100, 'ACTIVE') ON CONFLICT (id) DO NOTHING", ticketID).Error
+		assert.NoError(t, err)
+		t.Cleanup(func() {
+			_ = db.Exec("DELETE FROM tickets WHERE id = ?", ticketID).Error
+		})
+
 		req4, _ := http.NewRequest(http.MethodGet, "/admin/info/tickets", nil)
 		req4.Header.Set("Cookie", cookie)
 		w4 := httptest.NewRecorder()
 		r.ServeHTTP(w4, req4)
 		assert.Equal(t, http.StatusOK, w4.Code)
+		assert.Contains(t, w4.Body.String(), ticketID)
+		assert.Contains(t, w4.Body.String(), "__goadmin_detail_pk="+ticketID)
+		assert.Contains(t, w4.Body.String(), "__goadmin_edit_pk="+ticketID)
+
+		// Test GET /admin/info/tickets/detail with valid UUID
+		reqDetail, _ := http.NewRequest(http.MethodGet, "/admin/info/tickets/detail?__goadmin_detail_pk="+ticketID, nil)
+		reqDetail.Header.Set("Cookie", cookie)
+		wDetail := httptest.NewRecorder()
+		r.ServeHTTP(wDetail, reqDetail)
+		assert.Equal(t, http.StatusOK, wDetail.Code)
+		assert.NotContains(t, wDetail.Body.String(), "invalid input syntax for type uuid")
+
+		// Test GET /admin/info/tickets/edit with valid UUID
+		reqEdit, _ := http.NewRequest(http.MethodGet, "/admin/info/tickets/edit?__goadmin_edit_pk="+ticketID, nil)
+		reqEdit.Header.Set("Cookie", cookie)
+		wEdit := httptest.NewRecorder()
+		r.ServeHTTP(wEdit, reqEdit)
+		assert.Equal(t, http.StatusOK, wEdit.Code)
+		assert.NotContains(t, wEdit.Body.String(), "invalid input syntax for type uuid")
 	}
 }
 

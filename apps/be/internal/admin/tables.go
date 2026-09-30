@@ -10,12 +10,11 @@ import (
 
 // GetTicketTable returns the table definition for Ticket model management
 func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
-	ticketTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql"))
+	ticketTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql").SetPrimaryKey("id", db.UUID))
 
 	info := ticketTable.GetInfo().SetFilterFormLayout(form.LayoutTwoCol)
 	info.AddField("ID", "id", db.UUID).
-		FieldSortable().
-		FieldCopyable()
+		FieldSortable()
 	info.AddField("Name", "name", db.Varchar).
 		FieldSortable().
 		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
@@ -76,12 +75,11 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 
 // GetUserTable returns the table definition for User model management
 func GetUserTable(ctx *context.Context) (userTable table.Table) {
-	userTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql"))
+	userTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql").SetPrimaryKey("id", db.UUID))
 
 	info := userTable.GetInfo().SetFilterFormLayout(form.LayoutTwoCol)
 	info.AddField("ID", "id", db.UUID).
-		FieldSortable().
-		FieldCopyable()
+		FieldSortable()
 	info.AddField("Email", "email", db.Varchar).
 		FieldSortable().
 		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
