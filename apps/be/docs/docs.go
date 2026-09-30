@@ -478,6 +478,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/tickets/{id}/my-quota": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve the booking limit, current booked count, and remaining quota for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get current user's quota for a ticket",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ticket UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User ticket quota retrieved successfully",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/http.UserTicketQuotaResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ticket ID",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Ticket not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/me": {
             "get": {
                 "security": [
@@ -838,6 +908,23 @@ const docTemplate = `{
                         }
                     ],
                     "example": "ACTIVE"
+                }
+            }
+        },
+        "http.UserTicketQuotaResponse": {
+            "type": "object",
+            "properties": {
+                "current_booked": {
+                    "type": "integer"
+                },
+                "max_booking_per_user": {
+                    "type": "integer"
+                },
+                "remaining_quota": {
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "type": "string"
                 }
             }
         },

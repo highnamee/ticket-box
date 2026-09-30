@@ -47,6 +47,15 @@ func (m *MockBookingRepository) FindByUserID(ctx context.Context, userID uuid.UU
 	return bookings, total, args.Error(2)
 }
 
+func (m *MockBookingRepository) GetUserTicketQuota(ctx context.Context, userID, ticketID uuid.UUID) (*domain.UserTicketQuota, error) {
+	args := m.Called(ctx, userID, ticketID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	quota, _ := args.Get(0).(*domain.UserTicketQuota)
+	return quota, args.Error(1)
+}
+
 func TestBookingService_BookTicket(t *testing.T) {
 	mockRepo := new(MockBookingRepository)
 	svc := service.NewBookingService(mockRepo)
@@ -195,5 +204,46 @@ func TestBookingService_GetUserBookings(t *testing.T) {
 		assert.Equal(t, int64(0), total)
 		assert.Nil(t, bookings)
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestBookingService_GetUserTicketQuota(t *testing.T) {
+	mockRepo := new(MockBookingRepository)
+	svc := service.NewBookingService(mockRepo)
+	ctx := context.Background()
+
+	userID := uuid.New()
+	ticketID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		max := 5
+		remaining := 3
+		expected := &domain.UserTicketQuota{
+			TicketID:          ticketID,
+			MaxBookingPerUser: &max,
+			CurrentBooked:     2,
+			RemainingQuota:    &remaining,
+		}
+
+		mockRepo.On("GetUserTicketQuota", ctx, userID, ticketID).Return(expected, nil).Once()
+
+		quota, err := svc.GetUserTicketQuota(ctx, userID, ticketID)
+		require.NoError(t, err)
+		assert.Equal(t, ticketID, quota.TicketID)
+		assert.Equal(t, 2, quota.CurrentBooked)
+		assert.Equal(t, 3, *quota.RemainingQuota)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("nil user ID returns unauthorized", func(t *testing.T) {
+		quota, err := svc.GetUserTicketQuota(ctx, uuid.Nil, ticketID)
+		assert.ErrorIs(t, err, domain.ErrUnauthorized)
+		assert.Nil(t, quota)
+	})
+
+	t.Run("nil ticket ID returns not found", func(t *testing.T) {
+		quota, err := svc.GetUserTicketQuota(ctx, userID, uuid.Nil)
+		assert.ErrorIs(t, err, domain.ErrTicketNotFound)
+		assert.Nil(t, quota)
 	})
 }

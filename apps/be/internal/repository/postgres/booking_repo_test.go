@@ -419,3 +419,102 @@ func TestBookingRepository_ConcurrentBooking_MaxPerUser(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(maxLimit), totalBookedQuantity)
 }
+
+func TestBookingRepository_GetUserTicketQuota(t *testing.T) {
+	tx := testutil.SetupTestDB(t)
+	ticketRepo := postgres.NewTicketRepository(tx)
+	userRepo := postgres.NewUserRepository(tx)
+	bookingRepo := postgres.NewBookingRepository(tx)
+	ctx := context.Background()
+
+	user := &domain.User{
+		Email:        "quota_tester_" + uuid.NewString()[:8] + "@example.com",
+		PasswordHash: "hashedsecret",
+		FullName:     "Quota Tester",
+		Role:         domain.RoleUser,
+		Status:       domain.StatusActive,
+	}
+	require.NoError(t, userRepo.Create(ctx, user))
+
+	maxLimit := 5
+	limitedTicket := &domain.Ticket{
+		Name:              "Quota Ticket",
+		Price:             50.0,
+		TotalQuantity:     20,
+		AvailableStock:    20,
+		MaxBookingPerUser: &maxLimit,
+		Status:            domain.TicketStatusActive,
+	}
+	require.NoError(t, ticketRepo.Create(ctx, limitedTicket))
+
+	t.Run("initial quota before any booking", func(t *testing.T) {
+		quota, err := bookingRepo.GetUserTicketQuota(ctx, user.ID, limitedTicket.ID)
+		require.NoError(t, err)
+		assert.Equal(t, limitedTicket.ID, quota.TicketID)
+		assert.Equal(t, 0, quota.CurrentBooked)
+		require.NotNil(t, quota.MaxBookingPerUser)
+		assert.Equal(t, 5, *quota.MaxBookingPerUser)
+		require.NotNil(t, quota.RemainingQuota)
+		assert.Equal(t, 5, *quota.RemainingQuota)
+	})
+
+	t.Run("quota updates after partial booking", func(t *testing.T) {
+		_, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 2)
+		require.NoError(t, err)
+
+		quota, err := bookingRepo.GetUserTicketQuota(ctx, user.ID, limitedTicket.ID)
+		require.NoError(t, err)
+		assert.Equal(t, 2, quota.CurrentBooked)
+		require.NotNil(t, quota.RemainingQuota)
+		assert.Equal(t, 3, *quota.RemainingQuota)
+	})
+
+	t.Run("quota reaches 0 when max reached", func(t *testing.T) {
+		_, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 3)
+		require.NoError(t, err)
+
+		quota, err := bookingRepo.GetUserTicketQuota(ctx, user.ID, limitedTicket.ID)
+		require.NoError(t, err)
+		assert.Equal(t, 5, quota.CurrentBooked)
+		require.NotNil(t, quota.RemainingQuota)
+		assert.Equal(t, 0, *quota.RemainingQuota)
+	})
+
+	t.Run("ticket without limit returns nil remaining quota", func(t *testing.T) {
+		unlimitedTicket := &domain.Ticket{
+			Name:           "Unlimited Ticket",
+			Price:          30.0,
+			TotalQuantity:  10,
+			AvailableStock: 10,
+			Status:         domain.TicketStatusActive,
+		}
+		require.NoError(t, ticketRepo.Create(ctx, unlimitedTicket))
+
+		quota, err := bookingRepo.GetUserTicketQuota(ctx, user.ID, unlimitedTicket.ID)
+		require.NoError(t, err)
+		assert.Nil(t, quota.MaxBookingPerUser)
+		assert.Nil(t, quota.RemainingQuota)
+		assert.Equal(t, 0, quota.CurrentBooked)
+	})
+
+	t.Run("non-existent ticket returns ErrTicketNotFound", func(t *testing.T) {
+		quota, err := bookingRepo.GetUserTicketQuota(ctx, user.ID, uuid.New())
+		assert.ErrorIs(t, err, domain.ErrTicketNotFound)
+		assert.Nil(t, quota)
+	})
+
+	t.Run("inactive ticket returns ErrTicketNotFound", func(t *testing.T) {
+		inactiveTicket := &domain.Ticket{
+			Name:           "Inactive Ticket",
+			Price:          30.0,
+			TotalQuantity:  10,
+			AvailableStock: 10,
+			Status:         domain.TicketStatusInactive,
+		}
+		require.NoError(t, ticketRepo.Create(ctx, inactiveTicket))
+
+		quota, err := bookingRepo.GetUserTicketQuota(ctx, user.ID, inactiveTicket.ID)
+		assert.ErrorIs(t, err, domain.ErrTicketNotFound)
+		assert.Nil(t, quota)
+	})
+}

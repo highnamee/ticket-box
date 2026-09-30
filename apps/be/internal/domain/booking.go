@@ -52,11 +52,20 @@ func (b *Booking) BeforeCreate(_ *gorm.DB) error {
 	return nil
 }
 
+// UserTicketQuota represents user's booking allowance and current usage for a specific ticket
+type UserTicketQuota struct {
+	TicketID          uuid.UUID `json:"ticket_id"`
+	MaxBookingPerUser *int      `json:"max_booking_per_user"`
+	CurrentBooked     int       `json:"current_booked"`
+	RemainingQuota    *int      `json:"remaining_quota"`
+}
+
 // BookingRepository defines contract for database operations with concurrency protection
 type BookingRepository interface {
 	CreateBookingWithLock(ctx context.Context, userID, ticketID uuid.UUID, quantity int) (*Booking, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*Booking, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, page, limit int) ([]Booking, int64, error)
+	GetUserTicketQuota(ctx context.Context, userID, ticketID uuid.UUID) (*UserTicketQuota, error)
 }
 
 // BookingService defines contract for booking business use cases
@@ -64,4 +73,5 @@ type BookingService interface {
 	BookTicket(ctx context.Context, userID, ticketID uuid.UUID, quantity int) (*Booking, error)
 	GetBookingByID(ctx context.Context, userID, bookingID uuid.UUID) (*Booking, error)
 	GetUserBookings(ctx context.Context, userID uuid.UUID, page, limit int) ([]Booking, int64, error)
+	GetUserTicketQuota(ctx context.Context, userID, ticketID uuid.UUID) (*UserTicketQuota, error)
 }
