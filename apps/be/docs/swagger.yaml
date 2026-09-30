@@ -3,12 +3,12 @@ definitions:
   domain.BookingStatus:
     enum:
     - CONFIRMED
-    - CANCELLED
+    - CANCELED
     - PENDING
     type: string
     x-enum-varnames:
     - BookingStatusConfirmed
-    - BookingStatusCancelled
+    - BookingStatusCanceled
     - BookingStatusPending
   domain.UserRole:
     enum:
