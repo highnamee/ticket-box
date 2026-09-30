@@ -1,6 +1,9 @@
 package admin
 
 import (
+	template2 "html/template"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/GoAdminGroup/go-admin/context"
@@ -63,4 +66,55 @@ func WithAutoTimestamps(formList *types.FormPanel, customFns ...types.FormPrePro
 		}
 		return values
 	})
+}
+
+// NullableIntDisplay returns a FieldFilterFn for InfoPanel that renders nullDisplay when the integer is NULL/0/"".
+func NullableIntDisplay(column string, nullDisplay string) types.FieldFilterFn {
+	return func(value types.FieldModel) interface{} {
+		if value.Row[column] == nil || value.Value == "0" || value.Value == "" {
+			return nullDisplay
+		}
+		return value.Value
+	}
+}
+
+// NullableIntFormDisplay returns a FieldFilterFn for FormPanel that clears "0" or nil back to "" so placeholders can display.
+func NullableIntFormDisplay(column string) types.FieldFilterFn {
+	return func(value types.FieldModel) interface{} {
+		if value.Row[column] == nil || value.Value == "0" || value.Value == "" {
+			return ""
+		}
+		return value.Value
+	}
+}
+
+// NullableIntPostFilter converts empty strings from form submissions to nil (SQL NULL), and parses non-empty values as integers.
+func NullableIntPostFilter() types.PostFieldFilterFn {
+	return func(value types.PostFieldModel) interface{} {
+		val := strings.TrimSpace(value.Value.Value())
+		if val == "" {
+			return nil
+		}
+		num, err := strconv.Atoi(val)
+		if err != nil {
+			return val
+		}
+		return num
+	}
+}
+
+// AddNullableIntColumn adds a sortable integer column to an InfoPanel that renders fallback text when NULL.
+func AddNullableIntColumn(info *types.InfoPanel, head, field, nullDisplay string) *types.InfoPanel {
+	return info.AddField(head, field, db.Int).
+		FieldSortable().
+		FieldDisplay(NullableIntDisplay(field, nullDisplay))
+}
+
+// AddNullableIntFormField registers a text-based integer input on a FormPanel that supports SQL NULL when left empty.
+func AddNullableIntFormField(formList *types.FormPanel, head, field, placeholder, helpMsg string) *types.FormPanel {
+	return formList.AddField(head, field, db.Int, form.Text).
+		FieldPlaceholder(placeholder).
+		FieldHelpMsg(template2.HTML(helpMsg)).
+		FieldDisplay(NullableIntFormDisplay(field)).
+		FieldPostFilterFn(NullableIntPostFilter())
 }
