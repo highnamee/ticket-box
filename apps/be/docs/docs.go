@@ -446,7 +446,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "Bad request - invalid quantity, payload, or exceeded max booking limit per user",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }

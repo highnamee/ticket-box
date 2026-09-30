@@ -30,7 +30,7 @@ func NewBookingHandler(bookingService domain.BookingService) *BookingHandler {
 // @Param        id      path      string             true  "Ticket UUID"
 // @Param        request body      BookTicketRequest  true  "Booking details"
 // @Success      201     {object}  response.APIResponse{data=BookingResponse}  "Ticket booked successfully"
-// @Failure      400     {object}  response.APIResponse                        "Bad request"
+// @Failure      400     {object}  response.APIResponse                        "Bad request - invalid quantity, payload, or exceeded max booking limit per user"
 // @Failure      401     {object}  response.APIResponse                        "Unauthorized"
 // @Failure      404     {object}  response.APIResponse                        "Ticket not found"
 // @Failure      409     {object}  response.APIResponse                        "Conflict - ticket sold out or insufficient stock"
