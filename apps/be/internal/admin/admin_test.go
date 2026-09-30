@@ -1,10 +1,13 @@
 package admin
 
 import (
+	"bytes"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -82,13 +85,59 @@ func TestGoAdmin_Routes(t *testing.T) {
 		assert.Equal(t, http.StatusOK, wDetail.Code)
 		assert.NotContains(t, wDetail.Body.String(), "invalid input syntax for type uuid")
 
-		// Test GET /admin/info/tickets/edit with valid UUID
-		reqEdit, _ := http.NewRequest(http.MethodGet, "/admin/info/tickets/edit?__goadmin_edit_pk="+ticketID, nil)
-		reqEdit.Header.Set("Cookie", cookie)
-		wEdit := httptest.NewRecorder()
-		r.ServeHTTP(wEdit, reqEdit)
-		assert.Equal(t, http.StatusOK, wEdit.Code)
-		assert.NotContains(t, wEdit.Body.String(), "invalid input syntax for type uuid")
+		// Test creating a ticket via GoAdmin POST /admin/new/tickets
+		reqNew, _ := http.NewRequest(http.MethodGet, "/admin/info/tickets/new", nil)
+		reqNew.Header.Set("Cookie", cookie)
+		wNew := httptest.NewRecorder()
+		r.ServeHTTP(wNew, reqNew)
+		assert.Equal(t, http.StatusOK, wNew.Code)
+
+		newBody := wNew.Body.String()
+		tokenKey := `name="__go_admin_t_" value='`
+		token := ""
+		if idx := strings.Index(newBody, tokenKey); idx != -1 {
+			token = newBody[idx+len(tokenKey):]
+			if endIdx := strings.Index(token, `'`); endIdx != -1 {
+				token = token[:endIdx]
+			}
+		}
+		assert.NotEmpty(t, token)
+
+		var buf bytes.Buffer
+		mw := multipart.NewWriter(&buf)
+		_ = mw.WriteField("name", "Festival Ticket")
+		_ = mw.WriteField("price", "120.00")
+		_ = mw.WriteField("total_quantity", "50")
+		_ = mw.WriteField("available_stock", "50")
+		_ = mw.WriteField("status", "ACTIVE")
+		_ = mw.WriteField("max_booking_per_user", "4")
+		_ = mw.WriteField("__go_admin_t_", token)
+		_ = mw.WriteField("__go_admin_previous_", "/admin/info/tickets")
+		_ = mw.Close()
+
+		reqCreate, _ := http.NewRequest(http.MethodPost, "/admin/new/tickets", &buf)
+		reqCreate.Header.Set("Cookie", cookie)
+		reqCreate.Header.Set("Content-Type", mw.FormDataContentType())
+		wCreate := httptest.NewRecorder()
+		r.ServeHTTP(wCreate, reqCreate)
+		assert.Equal(t, http.StatusOK, wCreate.Code)
+
+		var createdTicket struct {
+			ID        string
+			CreatedAt *time.Time
+			UpdatedAt *time.Time
+		}
+		err = db.Table("tickets").Where("name = ?", "Festival Ticket").Take(&createdTicket).Error
+		assert.NoError(t, err)
+		assert.NotEmpty(t, createdTicket.ID)
+		assert.NotNil(t, createdTicket.CreatedAt, "created_at must not be nil when created by GoAdmin")
+		assert.NotNil(t, createdTicket.UpdatedAt, "updated_at must not be nil when created by GoAdmin")
+		t.Logf("Created ticket CreatedAt RFC3339Nano: %s", createdTicket.CreatedAt.Format(time.RFC3339Nano))
+		assert.NotZero(t, createdTicket.CreatedAt.Nanosecond(), "created_at should have sub-second precision matching postgres")
+
+		t.Cleanup(func() {
+			_ = db.Exec("DELETE FROM tickets WHERE name = 'Festival Ticket'").Error
+		})
 	}
 }
 

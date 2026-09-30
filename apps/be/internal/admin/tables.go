@@ -10,11 +10,10 @@ import (
 
 // GetTicketTable returns the table definition for Ticket model management
 func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
-	ticketTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql").SetPrimaryKey("id", db.UUID))
+	ticketTable = NewUUIDTable(ctx)
 
 	info := ticketTable.GetInfo().SetFilterFormLayout(form.LayoutTwoCol)
-	info.AddField("ID", "id", db.UUID).
-		FieldSortable()
+	AddIDColumn(info)
 	info.AddField("Name", "name", db.Varchar).
 		FieldSortable().
 		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
@@ -34,19 +33,14 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 			{Value: "SOLD_OUT", Text: "SOLD_OUT"},
 			{Value: "INACTIVE", Text: "INACTIVE"},
 		})
-	info.AddField("Created At", "created_at", db.Timestamp).
-		FieldSortable()
-	info.AddField("Updated At", "updated_at", db.Timestamp).
-		FieldSortable()
+	AddTimestampColumns(info)
 
 	info.SetTable("tickets").
 		SetTitle("Tickets").
 		SetDescription("Manage Event Tickets and Inventory")
 
 	formList := ticketTable.GetForm()
-	formList.AddField("ID", "id", db.UUID, form.Text).
-		FieldDisableWhenCreate().
-		FieldDisableWhenUpdate()
+	AddIDFormField(formList)
 	formList.AddField("Name", "name", db.Varchar, form.Text).
 		FieldMust()
 	formList.AddField("Description", "description", db.Text, form.TextArea)
@@ -65,6 +59,8 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 			{Value: "INACTIVE", Text: "INACTIVE"},
 		}).
 		FieldDefault("INACTIVE")
+	AddTimestampFormFields(formList)
+	WithAutoTimestamps(formList)
 
 	formList.SetTable("tickets").
 		SetTitle("Ticket Details").
@@ -75,11 +71,10 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 
 // GetUserTable returns the table definition for User model management
 func GetUserTable(ctx *context.Context) (userTable table.Table) {
-	userTable = table.NewDefaultTable(ctx, table.DefaultConfigWithDriver("postgresql").SetPrimaryKey("id", db.UUID))
+	userTable = NewUUIDTable(ctx)
 
 	info := userTable.GetInfo().SetFilterFormLayout(form.LayoutTwoCol)
-	info.AddField("ID", "id", db.UUID).
-		FieldSortable()
+	AddIDColumn(info)
 	info.AddField("Email", "email", db.Varchar).
 		FieldSortable().
 		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
@@ -101,19 +96,14 @@ func GetUserTable(ctx *context.Context) (userTable table.Table) {
 			{Value: "INACTIVE", Text: "INACTIVE"},
 			{Value: "BANNED", Text: "BANNED"},
 		})
-	info.AddField("Created At", "created_at", db.Timestamp).
-		FieldSortable()
-	info.AddField("Updated At", "updated_at", db.Timestamp).
-		FieldSortable()
+	AddTimestampColumns(info)
 
 	info.SetTable("users").
 		SetTitle("Users").
 		SetDescription("Manage Platform Users and Roles")
 
 	formList := userTable.GetForm()
-	formList.AddField("ID", "id", db.UUID, form.Text).
-		FieldDisableWhenCreate().
-		FieldDisableWhenUpdate()
+	AddIDFormField(formList)
 	formList.AddField("Email", "email", db.Varchar, form.Email).
 		FieldMust()
 	formList.AddField("Full Name", "full_name", db.Varchar, form.Text).
@@ -131,6 +121,8 @@ func GetUserTable(ctx *context.Context) (userTable table.Table) {
 			{Value: "BANNED", Text: "BANNED"},
 		}).
 		FieldDefault("ACTIVE")
+	AddTimestampFormFields(formList)
+	WithAutoTimestamps(formList)
 
 	formList.SetTable("users").
 		SetTitle("User Details").
