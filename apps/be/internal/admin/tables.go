@@ -25,6 +25,8 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 		FieldSortable()
 	info.AddField("Available Stock", "available_stock", db.Int).
 		FieldSortable()
+	info.AddField("Max/User", "max_booking_per_user", db.Int).
+		FieldSortable()
 	info.AddField("Status", "status", db.Varchar).
 		FieldSortable().
 		FieldFilterable(types.FilterType{FormType: form.SelectSingle}).
@@ -55,6 +57,7 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 		FieldMust()
 	formList.AddField("Available Stock", "available_stock", db.Int, form.Number).
 		FieldMust()
+	formList.AddField("Max Per User", "max_booking_per_user", db.Int, form.Number)
 	formList.AddField("Status", "status", db.Varchar, form.SelectSingle).
 		FieldOptions(types.FieldOptions{
 			{Value: "ACTIVE", Text: "ACTIVE"},

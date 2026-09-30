@@ -610,12 +610,12 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "CONFIRMED",
-                "CANCELLED",
+                "CANCELED",
                 "PENDING"
             ],
             "x-enum-varnames": [
                 "BookingStatusConfirmed",
-                "BookingStatusCancelled",
+                "BookingStatusCanceled",
                 "BookingStatusPending"
             ]
         },

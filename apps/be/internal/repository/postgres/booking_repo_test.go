@@ -2,6 +2,7 @@ package postgres_test
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -119,6 +120,66 @@ func TestBookingRepository_CreateBookingWithLock(t *testing.T) {
 		bookingNeg, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, ticket.ID, -5)
 		assert.ErrorIs(t, err, domain.ErrInvalidQuantity)
 		assert.Nil(t, bookingNeg)
+	})
+
+	t.Run("enforces max_booking_per_user limit correctly", func(t *testing.T) {
+		maxLimit := 3
+		limitedTicket := &domain.Ticket{
+			Name:              "Limited Ticket",
+			Price:             80.0,
+			TotalQuantity:     10,
+			AvailableStock:    10,
+			MaxBookingPerUser: &maxLimit,
+			Status:            domain.TicketStatusActive,
+		}
+		require.NoError(t, ticketRepo.Create(ctx, limitedTicket))
+
+		// 1. Single booking exceeding limit should fail
+		booking, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 4)
+		assert.ErrorIs(t, err, domain.ErrMaxBookingLimitExceeded)
+		assert.Nil(t, booking)
+
+		// Verify stock unchanged
+		tk, err := ticketRepo.FindByID(ctx, limitedTicket.ID)
+		require.NoError(t, err)
+		assert.Equal(t, 10, tk.AvailableStock)
+
+		// 2. Booking within limit (quantity 2) succeeds
+		b1, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 2)
+		require.NoError(t, err)
+		assert.NotNil(t, b1)
+		assert.Equal(t, 2, b1.Quantity)
+
+		// 3. Subsequent booking that would exceed remaining allowed (2 + 2 = 4 > 3) fails
+		b2, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 2)
+		assert.ErrorIs(t, err, domain.ErrMaxBookingLimitExceeded)
+		assert.Nil(t, b2)
+
+		// 4. Subsequent booking that exactly reaches limit (2 + 1 = 3 == 3) succeeds
+		b3, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 1)
+		require.NoError(t, err)
+		assert.NotNil(t, b3)
+		assert.Equal(t, 1, b3.Quantity)
+
+		// 5. Any further booking fails because user has reached limit
+		b4, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, limitedTicket.ID, 1)
+		assert.ErrorIs(t, err, domain.ErrMaxBookingLimitExceeded)
+		assert.Nil(t, b4)
+
+		// 6. Another user can still book up to their own limit
+		anotherUser := &domain.User{
+			Email:        "another_buyer_" + uuid.NewString()[:8] + "@example.com",
+			PasswordHash: "hashedsecret",
+			FullName:     "Another Buyer",
+			Role:         domain.RoleUser,
+			Status:       domain.StatusActive,
+		}
+		require.NoError(t, userRepo.Create(ctx, anotherUser))
+
+		bOther, err := bookingRepo.CreateBookingWithLock(ctx, anotherUser.ID, limitedTicket.ID, 3)
+		require.NoError(t, err)
+		assert.NotNil(t, bOther)
+		assert.Equal(t, 3, bOther.Quantity)
 	})
 }
 
@@ -268,4 +329,93 @@ func TestBookingRepository_ConcurrentBooking(t *testing.T) {
 		Scan(&totalBookedQuantity).Error
 	require.NoError(t, err)
 	assert.Equal(t, int64(initialStock), totalBookedQuantity, "Sum of booked tickets must match initial stock")
+}
+
+func TestBookingRepository_ConcurrentBooking_MaxPerUser(t *testing.T) {
+	cfg := testutil.GetTestConfig(t)
+	db, err := database.NewDatabase(cfg)
+	if err != nil {
+		t.Skipf("Skipping concurrent integration test (database unreachable: %v)", err)
+		return
+	}
+	if err := database.MigrateUp(db); err != nil {
+		t.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	ticketRepo := postgres.NewTicketRepository(db)
+	userRepo := postgres.NewUserRepository(db)
+	bookingRepo := postgres.NewBookingRepository(db)
+	ctx := context.Background()
+
+	user := &domain.User{
+		Email:        "concurrent_limit_user_" + uuid.NewString()[:8] + "@example.com",
+		PasswordHash: "hashedsecret",
+		FullName:     "Concurrent Limit Buyer",
+		Role:         domain.RoleUser,
+		Status:       domain.StatusActive,
+	}
+	require.NoError(t, userRepo.Create(ctx, user))
+	t.Cleanup(func() {
+		_ = db.Exec("DELETE FROM bookings WHERE user_id = ?", user.ID).Error
+		_ = db.Exec("DELETE FROM users WHERE id = ?", user.ID).Error
+	})
+
+	maxLimit := 3
+	initialStock := 20
+	ticket := &domain.Ticket{
+		Name:              "Concurrent Limit Ticket " + uuid.NewString()[:8],
+		Price:             50.0,
+		TotalQuantity:     initialStock,
+		AvailableStock:    initialStock,
+		MaxBookingPerUser: &maxLimit,
+		Status:            domain.TicketStatusActive,
+	}
+	require.NoError(t, ticketRepo.Create(ctx, ticket))
+	t.Cleanup(func() {
+		_ = db.Exec("DELETE FROM bookings WHERE ticket_id = ?", ticket.ID).Error
+		_ = db.Exec("DELETE FROM tickets WHERE id = ?", ticket.ID).Error
+	})
+
+	concurrentRequests := 30
+	var wg sync.WaitGroup
+	var successCount int32
+	var limitExceededCount int32
+
+	startSignal := make(chan struct{})
+
+	for i := 0; i < concurrentRequests; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-startSignal
+
+			_, bookErr := bookingRepo.CreateBookingWithLock(ctx, user.ID, ticket.ID, 1)
+			if bookErr == nil {
+				atomic.AddInt32(&successCount, 1)
+			} else if errors.Is(bookErr, domain.ErrMaxBookingLimitExceeded) {
+				atomic.AddInt32(&limitExceededCount, 1)
+			}
+		}()
+	}
+
+	close(startSignal)
+	wg.Wait()
+
+	// Exactly maxLimit (3) bookings must succeed
+	assert.Equal(t, int32(maxLimit), successCount, "Exactly 3 bookings should succeed")
+	assert.Equal(t, int32(concurrentRequests-maxLimit), limitExceededCount, "27 bookings should fail with ErrMaxBookingLimitExceeded")
+
+	// Final ticket stock in DB must be 20 - 3 = 17
+	finalTicket, err := ticketRepo.FindByID(ctx, ticket.ID)
+	require.NoError(t, err)
+	assert.Equal(t, initialStock-maxLimit, finalTicket.AvailableStock)
+
+	// Total quantity recorded in bookings table for this user must equal maxLimit
+	var totalBookedQuantity int64
+	err = db.Model(&domain.Booking{}).
+		Where("user_id = ? AND ticket_id = ?", user.ID, ticket.ID).
+		Select("COALESCE(SUM(quantity), 0)").
+		Scan(&totalBookedQuantity).Error
+	require.NoError(t, err)
+	assert.Equal(t, int64(maxLimit), totalBookedQuantity)
 }

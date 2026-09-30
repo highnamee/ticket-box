@@ -17,16 +17,17 @@ const (
 )
 
 type Ticket struct {
-	ID             uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Name           string         `gorm:"type:varchar(255);not null" json:"name"`
-	Description    string         `gorm:"type:text" json:"description"`
-	Price          float64        `gorm:"type:decimal(12,2);not null;default:0" json:"price"`
-	TotalQuantity  int            `gorm:"not null;default:0" json:"total_quantity"`
-	AvailableStock int            `gorm:"not null;default:0" json:"available_stock"`
-	Status         TicketStatus   `gorm:"type:varchar(50);not null;default:'INACTIVE'" json:"status"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `gorm:"index" json:"-"`
+	ID                uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Name              string         `gorm:"type:varchar(255);not null" json:"name"`
+	Description       string         `gorm:"type:text" json:"description"`
+	Price             float64        `gorm:"type:decimal(12,2);not null;default:0" json:"price"`
+	TotalQuantity     int            `gorm:"not null;default:0" json:"total_quantity"`
+	AvailableStock    int            `gorm:"not null;default:0" json:"available_stock"`
+	MaxBookingPerUser *int           `gorm:"default:null" json:"max_booking_per_user,omitempty"`
+	Status            TicketStatus   `gorm:"type:varchar(50);not null;default:'INACTIVE'" json:"status"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
+	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 func (Ticket) TableName() string {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTicket_TableName(t *testing.T) {
@@ -18,16 +19,18 @@ func TestTicket_TableName(t *testing.T) {
 func TestTicket_DefaultsAndStatus(t *testing.T) {
 	now := time.Now()
 	testID := uuid.New()
+	maxBooking := 4
 	ticket := domain.Ticket{
-		ID:             testID,
-		Name:           "VIP Pass",
-		Description:    "Access to VIP lounge",
-		Price:          150.00,
-		TotalQuantity:  100,
-		AvailableStock: 100,
-		Status:         domain.TicketStatusActive,
-		CreatedAt:      now,
-		UpdatedAt:      now,
+		ID:                testID,
+		Name:              "VIP Pass",
+		Description:       "Access to VIP lounge",
+		Price:             150.00,
+		TotalQuantity:     100,
+		AvailableStock:    100,
+		MaxBookingPerUser: &maxBooking,
+		Status:            domain.TicketStatusActive,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 
 	assert.Equal(t, testID, ticket.ID)
@@ -35,7 +38,12 @@ func TestTicket_DefaultsAndStatus(t *testing.T) {
 	assert.Equal(t, 150.00, ticket.Price)
 	assert.Equal(t, 100, ticket.TotalQuantity)
 	assert.Equal(t, 100, ticket.AvailableStock)
+	require.NotNil(t, ticket.MaxBookingPerUser)
+	assert.Equal(t, 4, *ticket.MaxBookingPerUser)
 	assert.Equal(t, domain.TicketStatusActive, ticket.Status)
+
+	ticketNoLimit := domain.Ticket{}
+	assert.Nil(t, ticketNoLimit.MaxBookingPerUser)
 }
 
 func TestTicket_BeforeCreate(t *testing.T) {

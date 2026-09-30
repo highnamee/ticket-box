@@ -3,13 +3,14 @@ package domain
 import "errors"
 
 var (
-	ErrNotFound          = errors.New("record not found")
-	ErrTicketNotFound    = errors.New("ticket not found")
-	ErrTicketSoldOut     = errors.New("ticket is sold out")
-	ErrInsufficientStock = errors.New("insufficient ticket stock")
-	ErrInvalidQuantity   = errors.New("invalid quantity requested")
-	ErrInvalidPagination = errors.New("invalid pagination parameters")
-	ErrBookingNotFound   = errors.New("booking not found")
+	ErrNotFound                = errors.New("record not found")
+	ErrTicketNotFound          = errors.New("ticket not found")
+	ErrTicketSoldOut           = errors.New("ticket is sold out")
+	ErrInsufficientStock       = errors.New("insufficient ticket stock")
+	ErrInvalidQuantity         = errors.New("invalid quantity requested")
+	ErrInvalidPagination       = errors.New("invalid pagination parameters")
+	ErrBookingNotFound         = errors.New("booking not found")
+	ErrMaxBookingLimitExceeded = errors.New("exceeded maximum booking limit per user")
 
 	// Authentication & User domain errors
 	ErrUserNotFound        = errors.New("user not found")
