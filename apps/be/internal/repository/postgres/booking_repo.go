@@ -188,3 +188,43 @@ func (r *BookingRepository) checkUserBookingLimit(tx *gorm.DB, userID, ticketID 
 
 	return nil
 }
+
+func (r *BookingRepository) GetUserTicketQuota(ctx context.Context, userID, ticketID uuid.UUID) (*domain.UserTicketQuota, error) {
+	var ticket domain.Ticket
+	err := r.db.WithContext(ctx).First(&ticket, "id = ?", ticketID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrTicketNotFound
+		}
+		return nil, err
+	}
+
+	if ticket.Status == domain.TicketStatusInactive {
+		return nil, domain.ErrTicketNotFound
+	}
+
+	var currentBooked int64
+	err = r.db.WithContext(ctx).Model(&domain.Booking{}).
+		Where("user_id = ? AND ticket_id = ? AND status = ?", userID, ticketID, domain.BookingStatusConfirmed).
+		Select("COALESCE(SUM(quantity), 0)").
+		Scan(&currentBooked).Error
+	if err != nil {
+		return nil, err
+	}
+
+	quota := &domain.UserTicketQuota{
+		TicketID:          ticketID,
+		MaxBookingPerUser: ticket.MaxBookingPerUser,
+		CurrentBooked:     int(currentBooked),
+	}
+
+	if ticket.MaxBookingPerUser != nil {
+		remaining := *ticket.MaxBookingPerUser - int(currentBooked)
+		if remaining < 0 {
+			remaining = 0
+		}
+		quota.RemainingQuota = &remaining
+	}
+
+	return quota, nil
+}

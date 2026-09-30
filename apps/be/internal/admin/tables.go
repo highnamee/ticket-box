@@ -57,7 +57,8 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 		FieldMust()
 	formList.AddField("Available Stock", "available_stock", db.Int, form.Number).
 		FieldMust()
-	formList.AddField("Max Per User", "max_booking_per_user", db.Int, form.Number)
+	formList.AddField("Max Per User", "max_booking_per_user", db.Int, form.Number).
+		FieldHelpMsg("Optional maximum tickets a single user can book. Leave empty for unlimited.")
 	formList.AddField("Status", "status", db.Varchar, form.SelectSingle).
 		FieldOptions(types.FieldOptions{
 			{Value: "ACTIVE", Text: "ACTIVE"},

@@ -163,6 +163,17 @@ definitions:
         - $ref: '#/definitions/domain.UserStatus'
         example: ACTIVE
     type: object
+  http.UserTicketQuotaResponse:
+    properties:
+      current_booked:
+        type: integer
+      max_booking_per_user:
+        type: integer
+      remaining_quota:
+        type: integer
+      ticket_id:
+        type: string
+    type: object
   response.APIResponse:
     properties:
       data: {}
@@ -464,7 +475,8 @@ paths:
                   $ref: '#/definitions/http.BookingResponse'
               type: object
         "400":
-          description: Bad request
+          description: Bad request - invalid quantity, payload, or exceeded max booking
+            limit per user
           schema:
             $ref: '#/definitions/response.APIResponse'
         "401":
@@ -486,6 +498,49 @@ paths:
       security:
       - BearerAuth: []
       summary: Book a ticket
+      tags:
+      - Bookings
+  /tickets/{id}/my-quota:
+    get:
+      description: Retrieve the booking limit, current booked count, and remaining
+        quota for the authenticated user
+      parameters:
+      - description: Ticket UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User ticket quota retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/http.UserTicketQuotaResponse'
+              type: object
+        "400":
+          description: Invalid ticket ID
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Ticket not found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user's quota for a ticket
       tags:
       - Bookings
   /users/me:

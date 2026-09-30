@@ -50,3 +50,20 @@ func toBookingResponseList(bookings []domain.Booking) []BookingResponse {
 	}
 	return res
 }
+
+// UserTicketQuotaResponse represents user's booking allowance and current usage for a ticket
+type UserTicketQuotaResponse struct {
+	TicketID          uuid.UUID `json:"ticket_id"`
+	MaxBookingPerUser *int      `json:"max_booking_per_user"`
+	CurrentBooked     int       `json:"current_booked"`
+	RemainingQuota    *int      `json:"remaining_quota"`
+}
+
+func toUserTicketQuotaResponse(q *domain.UserTicketQuota) UserTicketQuotaResponse {
+	return UserTicketQuotaResponse{
+		TicketID:          q.TicketID,
+		MaxBookingPerUser: q.MaxBookingPerUser,
+		CurrentBooked:     q.CurrentBooked,
+		RemainingQuota:    q.RemainingQuota,
+	}
+}

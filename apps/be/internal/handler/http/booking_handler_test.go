@@ -54,6 +54,15 @@ func (m *MockBookingService) GetUserBookings(ctx context.Context, userID uuid.UU
 	return bookings, total, args.Error(2)
 }
 
+func (m *MockBookingService) GetUserTicketQuota(ctx context.Context, userID, ticketID uuid.UUID) (*domain.UserTicketQuota, error) {
+	args := m.Called(ctx, userID, ticketID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	quota, _ := args.Get(0).(*domain.UserTicketQuota)
+	return quota, args.Error(1)
+}
+
 type SingleBookingResponse struct {
 	Success bool            `json:"success"`
 	Message string          `json:"message"`
@@ -74,6 +83,7 @@ func setupBookingTestRouter(handler *BookingHandler, userID *uuid.UUID) *gin.Eng
 	}
 
 	r.POST("/api/v1/tickets/:id/book", handler.BookTicket)
+	r.GET("/api/v1/tickets/:id/my-quota", handler.GetMyTicketQuota)
 	r.GET("/api/v1/users/me/bookings", handler.GetMyBookings)
 	return r
 }
@@ -286,5 +296,92 @@ func TestBookingHandler_GetMyBookings(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestBookingHandler_GetMyTicketQuota(t *testing.T) {
+	userID := uuid.New()
+	ticketID := uuid.New()
+
+	t.Run("200 OK returns user ticket quota", func(t *testing.T) {
+		mockService := new(MockBookingService)
+		handler := NewBookingHandler(mockService)
+		router := setupBookingTestRouter(handler, &userID)
+
+		max := 4
+		remaining := 2
+		expectedQuota := &domain.UserTicketQuota{
+			TicketID:          ticketID,
+			MaxBookingPerUser: &max,
+			CurrentBooked:     2,
+			RemainingQuota:    &remaining,
+		}
+
+		mockService.On("GetUserTicketQuota", mock.Anything, userID, ticketID).
+			Return(expectedQuota, nil).Once()
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/v1/tickets/"+ticketID.String()+"/my-quota", nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		type QuotaResponse struct {
+			Success bool                    `json:"success"`
+			Message string                  `json:"message"`
+			Data    UserTicketQuotaResponse `json:"data"`
+		}
+
+		var resp QuotaResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		assert.True(t, resp.Success)
+		assert.Equal(t, ticketID, resp.Data.TicketID)
+		assert.Equal(t, 2, resp.Data.CurrentBooked)
+		require.NotNil(t, resp.Data.MaxBookingPerUser)
+		assert.Equal(t, 4, *resp.Data.MaxBookingPerUser)
+		require.NotNil(t, resp.Data.RemainingQuota)
+		assert.Equal(t, 2, *resp.Data.RemainingQuota)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("400 Bad Request on invalid ticket ID", func(t *testing.T) {
+		mockService := new(MockBookingService)
+		handler := NewBookingHandler(mockService)
+		router := setupBookingTestRouter(handler, &userID)
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/v1/tickets/invalid-uuid/my-quota", nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("401 Unauthorized when not logged in", func(t *testing.T) {
+		mockService := new(MockBookingService)
+		handler := NewBookingHandler(mockService)
+		router := setupBookingTestRouter(handler, nil) // no auth
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/v1/tickets/"+ticketID.String()+"/my-quota", nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("404 Not Found when ticket does not exist", func(t *testing.T) {
+		mockService := new(MockBookingService)
+		handler := NewBookingHandler(mockService)
+		router := setupBookingTestRouter(handler, &userID)
+
+		mockService.On("GetUserTicketQuota", mock.Anything, userID, ticketID).
+			Return(nil, domain.ErrTicketNotFound).Once()
+
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/api/v1/tickets/"+ticketID.String()+"/my-quota", nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }

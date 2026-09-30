@@ -64,3 +64,14 @@ func (s *BookingService) GetUserBookings(ctx context.Context, userID uuid.UUID, 
 
 	return s.bookingRepo.FindByUserID(ctx, userID, page, limit)
 }
+
+func (s *BookingService) GetUserTicketQuota(ctx context.Context, userID, ticketID uuid.UUID) (*domain.UserTicketQuota, error) {
+	if userID == uuid.Nil {
+		return nil, domain.ErrUnauthorized
+	}
+	if ticketID == uuid.Nil {
+		return nil, domain.ErrTicketNotFound
+	}
+
+	return s.bookingRepo.GetUserTicketQuota(ctx, userID, ticketID)
+}

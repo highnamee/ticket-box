@@ -30,7 +30,7 @@ func NewBookingHandler(bookingService domain.BookingService) *BookingHandler {
 // @Param        id      path      string             true  "Ticket UUID"
 // @Param        request body      BookTicketRequest  true  "Booking details"
 // @Success      201     {object}  response.APIResponse{data=BookingResponse}  "Ticket booked successfully"
-// @Failure      400     {object}  response.APIResponse                        "Bad request"
+// @Failure      400     {object}  response.APIResponse                        "Bad request - invalid quantity, payload, or exceeded max booking limit per user"
 // @Failure      401     {object}  response.APIResponse                        "Unauthorized"
 // @Failure      404     {object}  response.APIResponse                        "Ticket not found"
 // @Failure      409     {object}  response.APIResponse                        "Conflict - ticket sold out or insufficient stock"
@@ -115,4 +115,47 @@ func (h *BookingHandler) GetMyBookings(c *gin.Context) {
 	items := toBookingResponseList(bookings)
 	pagination := response.NewPaginationMeta(query.Page, query.Limit, total)
 	response.SuccessWithPagination(c, http.StatusOK, "Bookings retrieved successfully", items, pagination)
+}
+
+// GetMyTicketQuota godoc
+// @Summary      Get current user's quota for a ticket
+// @Description  Retrieve the booking limit, current booked count, and remaining quota for the authenticated user
+// @Tags         Bookings
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id   path      string  true  "Ticket UUID"
+// @Success      200  {object}  response.APIResponse{data=UserTicketQuotaResponse}  "User ticket quota retrieved successfully"
+// @Failure      400  {object}  response.APIResponse                                "Invalid ticket ID"
+// @Failure      401  {object}  response.APIResponse                                "Unauthorized"
+// @Failure      404  {object}  response.APIResponse                                "Ticket not found"
+// @Failure      500  {object}  response.APIResponse                                "Internal server error"
+// @Router       /tickets/{id}/my-quota [get]
+func (h *BookingHandler) GetMyTicketQuota(c *gin.Context) {
+	ticketIDStr := c.Param("id")
+	ticketID, err := uuid.Parse(ticketIDStr)
+	if err != nil {
+		response.BadRequest(c, "Invalid ticket ID format", err.Error())
+		return
+	}
+
+	userID, ok := middleware.GetAuthUserID(c)
+	if !ok {
+		response.Error(c, http.StatusUnauthorized, "Unauthorized", domain.ErrUnauthorized)
+		return
+	}
+
+	quota, err := h.bookingService.GetUserTicketQuota(c.Request.Context(), userID, ticketID)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrTicketNotFound):
+			response.NotFound(c, "Ticket not found", err.Error())
+		case errors.Is(err, domain.ErrUnauthorized):
+			response.Error(c, http.StatusUnauthorized, "Unauthorized", err.Error())
+		default:
+			response.InternalServerError(c, "Failed to retrieve user ticket quota", err)
+		}
+		return
+	}
+
+	response.Success(c, http.StatusOK, "User ticket quota retrieved successfully", toUserTicketQuotaResponse(quota))
 }

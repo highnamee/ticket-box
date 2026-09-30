@@ -82,6 +82,7 @@ func NewRouter(cfg RouterConfig) *gin.Engine {
 			authTicketGroup.Use(middleware.AuthMiddleware(cfg.TokenMaker))
 			{
 				authTicketGroup.POST("/:id/book", cfg.BookingHandler.BookTicket)
+				authTicketGroup.GET("/:id/my-quota", cfg.BookingHandler.GetMyTicketQuota)
 			}
 		}
 		if cfg.AuthHandler != nil {
