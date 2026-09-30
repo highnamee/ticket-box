@@ -213,6 +213,30 @@ func TestBookingHandler_BookTicket(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, w.Code)
 		mockService.AssertExpectations(t)
 	})
+
+	t.Run("400 Bad Request when max booking limit per user is exceeded", func(t *testing.T) {
+		mockService := new(MockBookingService)
+		handler := NewBookingHandler(mockService)
+		router := setupBookingTestRouter(handler, &userID)
+
+		mockService.On("BookTicket", mock.Anything, userID, ticketID, 4).
+			Return(nil, domain.ErrMaxBookingLimitExceeded).Once()
+
+		reqBody := `{"quantity": 4}`
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/tickets/"+ticketID.String()+"/book", bytes.NewBufferString(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+
+		var resp response.APIResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
+		assert.False(t, resp.Success)
+		assert.Equal(t, "Exceeded maximum booking limit per user", resp.Message)
+		mockService.AssertExpectations(t)
+	})
 }
 
 func TestBookingHandler_GetMyBookings(t *testing.T) {

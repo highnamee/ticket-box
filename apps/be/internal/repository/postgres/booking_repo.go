@@ -39,7 +39,7 @@ func (r *BookingRepository) CreateBookingWithLock(ctx context.Context, userID, t
 			    status = CASE WHEN available_stock - ? = 0 THEN ? ELSE status END,
 			    updated_at = CURRENT_TIMESTAMP
 			WHERE id = ? AND status = ? AND available_stock >= ?
-			RETURNING id, name, price, available_stock, status, created_at, updated_at
+			RETURNING id, name, price, available_stock, max_booking_per_user, status, created_at, updated_at
 		`
 		result := tx.Raw(updateQuery, quantity, quantity, domain.TicketStatusSoldOut, ticketID, domain.TicketStatusActive, quantity).Scan(&ticket)
 		if result.Error != nil {
@@ -48,30 +48,17 @@ func (r *BookingRepository) CreateBookingWithLock(ctx context.Context, userID, t
 
 		// 2. If update didn't affect any row, inspect without locks to diagnose the exact error for client
 		if result.RowsAffected == 0 {
-			var existing domain.Ticket
-			if err := tx.First(&existing, "id = ?", ticketID).Error; err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					return domain.ErrTicketNotFound
-				}
-				return err
-			}
-
-			if existing.Status != domain.TicketStatusActive {
-				if existing.Status == domain.TicketStatusSoldOut {
-					return domain.ErrTicketSoldOut
-				}
-				// INACTIVE is a hidden system status -> ErrTicketNotFound
-				return domain.ErrTicketNotFound
-			}
-
-			if existing.AvailableStock < quantity {
-				return domain.ErrInsufficientStock
-			}
-
-			return domain.ErrInsufficientStock
+			return r.diagnoseBookingFailure(tx, userID, ticketID, quantity)
 		}
 
-		// 3. Create confirmed booking record
+		// 3. Validate max booking limit per user if configured (skip if nil)
+		if ticket.MaxBookingPerUser != nil {
+			if err := r.checkUserBookingLimit(tx, userID, ticketID, *ticket.MaxBookingPerUser, quantity); err != nil {
+				return err
+			}
+		}
+
+		// 4. Create confirmed booking record
 		totalAmount := ticket.Price * float64(quantity)
 		booking := &domain.Booking{
 			UserID:      userID,
@@ -143,4 +130,61 @@ func (r *BookingRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 		Find(&bookings).Error
 
 	return bookings, total, err
+}
+
+func (r *BookingRepository) diagnoseBookingFailure(tx *gorm.DB, userID, ticketID uuid.UUID, quantity int) error {
+	var existing domain.Ticket
+	if err := tx.First(&existing, "id = ?", ticketID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.ErrTicketNotFound
+		}
+		return err
+	}
+
+	if existing.Status != domain.TicketStatusActive {
+		if existing.Status == domain.TicketStatusSoldOut {
+			return domain.ErrTicketSoldOut
+		}
+		// INACTIVE is a hidden system status -> ErrTicketNotFound
+		return domain.ErrTicketNotFound
+	}
+
+	if existing.MaxBookingPerUser != nil {
+		var currentBooked int64
+		err := tx.Model(&domain.Booking{}).
+			Where("user_id = ? AND ticket_id = ? AND status = ?", userID, ticketID, domain.BookingStatusConfirmed).
+			Select("COALESCE(SUM(quantity), 0)").
+			Scan(&currentBooked).Error
+		if err != nil {
+			return err
+		}
+
+		if int(currentBooked)+quantity > *existing.MaxBookingPerUser {
+			return domain.ErrMaxBookingLimitExceeded
+		}
+	}
+
+	return domain.ErrInsufficientStock
+}
+
+func (r *BookingRepository) checkUserBookingLimit(tx *gorm.DB, userID, ticketID uuid.UUID, maxLimit, quantity int) error {
+	var dummy int
+	if err := tx.Raw("SELECT 1 FROM users WHERE id = ? FOR UPDATE", userID).Scan(&dummy).Error; err != nil {
+		return err
+	}
+
+	var currentBooked int64
+	err := tx.Model(&domain.Booking{}).
+		Where("user_id = ? AND ticket_id = ? AND status = ?", userID, ticketID, domain.BookingStatusConfirmed).
+		Select("COALESCE(SUM(quantity), 0)").
+		Scan(&currentBooked).Error
+	if err != nil {
+		return err
+	}
+
+	if int(currentBooked)+quantity > maxLimit {
+		return domain.ErrMaxBookingLimitExceeded
+	}
+
+	return nil
 }

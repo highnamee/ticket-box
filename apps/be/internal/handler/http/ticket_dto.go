@@ -14,22 +14,24 @@ type PaginationQuery struct {
 
 // PublicTicketResponse represents the serialized public view of a ticket
 type PublicTicketResponse struct {
-	ID             uuid.UUID           `json:"id"`
-	Name           string              `json:"name"`
-	Description    string              `json:"description"`
-	Price          float64             `json:"price"`
-	AvailableStock int                 `json:"available_stock"`
-	Status         domain.TicketStatus `json:"status"`
+	ID                uuid.UUID           `json:"id"`
+	Name              string              `json:"name"`
+	Description       string              `json:"description"`
+	Price             float64             `json:"price"`
+	AvailableStock    int                 `json:"available_stock"`
+	MaxBookingPerUser *int                `json:"max_booking_per_user,omitempty"`
+	Status            domain.TicketStatus `json:"status"`
 }
 
 func toPublicTicketResponse(t *domain.Ticket) PublicTicketResponse {
 	return PublicTicketResponse{
-		ID:             t.ID,
-		Name:           t.Name,
-		Description:    t.Description,
-		Price:          t.Price,
-		AvailableStock: t.AvailableStock,
-		Status:         t.Status,
+		ID:                t.ID,
+		Name:              t.Name,
+		Description:       t.Description,
+		Price:             t.Price,
+		AvailableStock:    t.AvailableStock,
+		MaxBookingPerUser: t.MaxBookingPerUser,
+		Status:            t.Status,
 	}
 }
 

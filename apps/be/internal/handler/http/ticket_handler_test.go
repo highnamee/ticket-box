@@ -55,16 +55,18 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	mockService := new(MockTicketService)
 	handler := NewTicketHandler(mockService)
 
+	maxBookingLimit := 5
 	mockTickets := []domain.Ticket{
 		{
-			ID:             uuid.New(),
-			Name:           "VIP Pass",
-			Price:          150.0,
-			TotalQuantity:  50,
-			AvailableStock: 50,
-			Status:         domain.TicketStatusActive,
-			CreatedAt:      time.Now(),
-			UpdatedAt:      time.Now(),
+			ID:                uuid.New(),
+			Name:              "VIP Pass",
+			Price:             150.0,
+			TotalQuantity:     50,
+			AvailableStock:    50,
+			MaxBookingPerUser: &maxBookingLimit,
+			Status:            domain.TicketStatusActive,
+			CreatedAt:         time.Now(),
+			UpdatedAt:         time.Now(),
 		},
 		{
 			ID:             uuid.New(),
@@ -115,7 +117,10 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	assert.Equal(t, "VIP Pass", res.Data.Items[0].Name)
 	assert.Equal(t, 150.0, res.Data.Items[0].Price)
 	assert.Equal(t, 50, res.Data.Items[0].AvailableStock)
+	require.NotNil(t, res.Data.Items[0].MaxBookingPerUser)
+	assert.Equal(t, 5, *res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, domain.TicketStatusActive, res.Data.Items[0].Status)
+	assert.Nil(t, res.Data.Items[1].MaxBookingPerUser)
 	mockService.AssertExpectations(t)
 }
 
