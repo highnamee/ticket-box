@@ -13,17 +13,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TicketBox - Smart Event Ticketing Platform",
-  description: "Next-gen event ticketing and booking platform built with Next.js and shadcn/ui",
+  title: "TicketBox - Nền Tảng Đặt Vé Thông Minh & Chống Phe Vé",
+  description:
+    "Nền tảng phân phối vé điện tử thế hệ mới cho concert, hội nghị và sự kiện thể thao với hệ thống Smart Queue và Dynamic QR.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="vi"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#f5f2eb] text-[#2b241e] font-sans">
+        {children}
+      </body>
     </html>
   );
 }
