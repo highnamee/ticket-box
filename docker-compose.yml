@@ -42,6 +42,23 @@ services:
     environment:
       DB_HOST: postgres
 
+  # ==========================================
+  # Frontend Web Service (Next.js + shadcn/ui)
+  # ==========================================
+  frontend:
+    build:
+      context: ./apps/fe
+      dockerfile: Dockerfile
+    container_name: ticket-box-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FE_PORT:-3000}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+
 volumes:
   postgres_data:
     driver: local
+

@@ -1,36 +1,49 @@
 # Ticket Box
 
-A ticket booking and event management platform.
+A modern event ticketing and booking platform built with **Go (Gin)** and **Next.js 16 (App Router)**.
 
-## Project Structure
+---
 
-```
+## 📁 Repository Overview
+
+```text
 ticket-box/
 ├── apps/
-│   ├── be/     # Golang backend (Gin framework)
-│   └── fe/     # Frontend application
-└── docker-compose.yml
+│   ├── be/         # Backend API (Go, Gin, GORM, PostgreSQL)
+│   └── fe/         # Frontend Web (Next.js 16, Tailwind v4, shadcn/ui)
+├── docker-compose.yml
+└── Makefile
 ```
 
-## Quick Start with Docker Compose
+| Component | Directory | Documentation |
+| :--- | :--- | :--- |
+| **Backend API** | [apps/be](apps/be) | [README](apps/be/README.md) • [AGENTS](apps/be/AGENTS.md) |
+| **Frontend Web** | [apps/fe](apps/fe) | [README](apps/fe/README.md) • [AGENTS](apps/fe/AGENTS.md) • [DESIGN](apps/fe/DESIGN.md) |
 
-Start the PostgreSQL database and backend API with a single command:
+---
+
+## 🚀 Quick Start (Makefile)
+
+Manage the entire platform using root `make` commands:
 
 ```bash
-# Start all services (Database + Backend)
-docker compose up -d
+# Start all services in Docker (PostgreSQL, Backend, Frontend)
+make up
 
-# Check status
-docker compose ps
+# Rebuild and start all services
+make up-build
 
-# View logs
-docker compose logs -f backend
+# Check status of running containers
+make ps
 
-# Stop all services
-docker compose down
+# Follow logs across all services
+make logs
+
+# Stop all services and remove containers
+make down
+
+# View all available make targets
+make help
 ```
 
-### Start Only PostgreSQL (For local Go development)
-```bash
-docker compose up -d postgres
-```
+For detailed setup, environment variables, and architecture rules, refer to [apps/be/README.md](apps/be/README.md) and [apps/fe/README.md](apps/fe/README.md).

@@ -1,0 +1,51 @@
+name: Frontend CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'apps/fe/**'
+      - '.github/workflows/fe-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'apps/fe/**'
+      - '.github/workflows/fe-ci.yml'
+
+jobs:
+  lint-and-build:
+    name: Lint & Build Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/fe
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'yarn'
+          cache-dependency-path: apps/fe/yarn.lock
+
+      - name: Install Dependencies
+        run: yarn install --immutable
+
+      - name: Run ESLint
+        run: yarn lint
+
+      - name: Build Application (Next.js & TypeScript)
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production
+        run: yarn build

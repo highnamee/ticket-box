@@ -1,4 +1,6 @@
-# OS / IDE
+# ==========================================
+# Operating System & IDEs
+# ==========================================
 .DS_Store
 .DS_Store?
 ._*
@@ -10,32 +12,66 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# Environment variables
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
 .env
 .env.*
 !.env.example
 !.env.test.example
+*.pem
 
-# Go
+# ==========================================
+# Go Backend (apps/be)
+# ==========================================
 apps/be/bin/
-apps/be/coverage.out
-apps/be/coverage.html
+bin/
 *.test
 *.prof
+coverage.out
+coverage.html
+apps/be/coverage.out
+apps/be/coverage.html
 
-# Node / Frontend
+# ==========================================
+# Frontend (apps/fe) & Node
+# ==========================================
 node_modules/
 dist/
 build/
 .next/
 out/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Yarn Berry & Package Managers
+.pnp
+.pnp.*
+.yarn/*
+**/.yarn/*
+!.yarn/patches
+!**/.yarn/patches
+!.yarn/plugins
+!**/.yarn/plugins
+!.yarn/releases
+!**/.yarn/releases
+!.yarn/versions
+!**/.yarn/versions
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Build artifacts & Temporary files
+# ==========================================
+# Build Artifacts & Temporary Files
+# ==========================================
 /tmp/
 /artifacts/
-*.log
+coverage/
