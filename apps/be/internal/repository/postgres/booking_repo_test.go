@@ -73,16 +73,17 @@ func TestBookingRepository_CreateBookingWithLock(t *testing.T) {
 		assert.Equal(t, 3, updatedTicket.AvailableStock)
 	})
 
-	t.Run("booking remaining stock marks ticket as SOLD_OUT", func(t *testing.T) {
+	t.Run("booking remaining stock leaves stock 0 and status ACTIVE", func(t *testing.T) {
 		booking, err := bookingRepo.CreateBookingWithLock(ctx, user.ID, ticket.ID, 3)
 		require.NoError(t, err)
 		assert.NotNil(t, booking)
 
-		// Verify ticket stock is 0 and status is SOLD_OUT
+		// Verify ticket stock is 0, status remains ACTIVE, and IsSoldOut is true
 		updatedTicket, err := ticketRepo.FindByID(ctx, ticket.ID)
 		require.NoError(t, err)
 		assert.Equal(t, 0, updatedTicket.AvailableStock)
-		assert.Equal(t, domain.TicketStatusSoldOut, updatedTicket.Status)
+		assert.Equal(t, domain.TicketStatusActive, updatedTicket.Status)
+		assert.True(t, updatedTicket.IsSoldOut())
 	})
 
 	t.Run("booking sold out ticket returns ErrTicketSoldOut", func(t *testing.T) {
@@ -319,7 +320,8 @@ func TestBookingRepository_ConcurrentBooking(t *testing.T) {
 	finalTicket, err := ticketRepo.FindByID(ctx, ticket.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 0, finalTicket.AvailableStock, "Final stock must be exactly 0")
-	assert.Equal(t, domain.TicketStatusSoldOut, finalTicket.Status, "Status must be SOLD_OUT")
+	assert.Equal(t, domain.TicketStatusActive, finalTicket.Status, "Status must remain ACTIVE")
+	assert.True(t, finalTicket.IsSoldOut(), "Ticket must be sold out")
 
 	// Total quantity recorded in bookings table must equal initialStock
 	var totalBookedQuantity int64

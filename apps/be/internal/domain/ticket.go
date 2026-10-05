@@ -12,7 +12,6 @@ type TicketStatus string
 
 const (
 	TicketStatusActive   TicketStatus = "ACTIVE"
-	TicketStatusSoldOut  TicketStatus = "SOLD_OUT"
 	TicketStatusInactive TicketStatus = "INACTIVE"
 )
 
@@ -32,6 +31,11 @@ type Ticket struct {
 
 func (Ticket) TableName() string {
 	return "tickets"
+}
+
+// IsSoldOut checks if the ticket has no available stock left.
+func (t *Ticket) IsSoldOut() bool {
+	return t.AvailableStock <= 0
 }
 
 // BeforeCreate hook to generate UUID v7 (Time-Ordered) if not provided and ensure default status

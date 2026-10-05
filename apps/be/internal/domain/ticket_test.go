@@ -46,6 +46,17 @@ func TestTicket_DefaultsAndStatus(t *testing.T) {
 	assert.Nil(t, ticketNoLimit.MaxBookingPerUser)
 }
 
+func TestTicket_IsSoldOut(t *testing.T) {
+	ticket := domain.Ticket{AvailableStock: 10}
+	assert.False(t, ticket.IsSoldOut())
+
+	ticket.AvailableStock = 0
+	assert.True(t, ticket.IsSoldOut())
+
+	ticket.AvailableStock = -1
+	assert.True(t, ticket.IsSoldOut())
+}
+
 func TestTicket_BeforeCreate(t *testing.T) {
 	t.Run("generates UUIDv7 when ID is nil", func(t *testing.T) {
 		ticket := domain.Ticket{Name: "General Admission"}

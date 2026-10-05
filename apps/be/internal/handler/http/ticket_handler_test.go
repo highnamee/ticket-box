@@ -74,7 +74,7 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 			Price:          50.0,
 			TotalQuantity:  30,
 			AvailableStock: 0,
-			Status:         domain.TicketStatusSoldOut,
+			Status:         domain.TicketStatusActive,
 			CreatedAt:      time.Now(),
 			UpdatedAt:      time.Now(),
 		},
@@ -117,9 +117,12 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	assert.Equal(t, "VIP Pass", res.Data.Items[0].Name)
 	assert.Equal(t, 150.0, res.Data.Items[0].Price)
 	assert.Equal(t, 50, res.Data.Items[0].AvailableStock)
+	assert.False(t, res.Data.Items[0].IsSoldOut)
 	require.NotNil(t, res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, 5, *res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, domain.TicketStatusActive, res.Data.Items[0].Status)
+	assert.Equal(t, 0, res.Data.Items[1].AvailableStock)
+	assert.True(t, res.Data.Items[1].IsSoldOut)
 	assert.Nil(t, res.Data.Items[1].MaxBookingPerUser)
 	mockService.AssertExpectations(t)
 }

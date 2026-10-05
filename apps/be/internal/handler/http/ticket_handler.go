@@ -19,7 +19,7 @@ func NewTicketHandler(ticketService domain.TicketService) *TicketHandler {
 
 // GetPublicTickets godoc
 // @Summary      Get public tickets
-// @Description  Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets) with pagination
+// @Description  Retrieve all public active tickets (excluding private INACTIVE tickets) with pagination
 // @Tags         Tickets
 // @Produce      json
 // @Param        page   query     int  false  "Page number (default 1, min 1)"                default(1)

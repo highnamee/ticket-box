@@ -102,7 +102,7 @@ func TestTicketRepository_FindPublic(t *testing.T) {
 		Price:          150.00,
 		TotalQuantity:  20,
 		AvailableStock: 0,
-		Status:         domain.TicketStatusSoldOut,
+		Status:         domain.TicketStatusActive,
 	}
 
 	require.NoError(t, repo.Create(ctx, activeTicket1))
@@ -118,7 +118,7 @@ func TestTicketRepository_FindPublic(t *testing.T) {
 
 	// Ensure INACTIVE is not present and order is ASC by price
 	for _, tk := range publicList {
-		assert.Contains(t, []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut}, tk.Status)
+		assert.Equal(t, domain.TicketStatusActive, tk.Status)
 		assert.NotEqual(t, inactiveTicket.ID, tk.ID, "Inactive ticket should not be returned in public scope")
 	}
 	assert.Equal(t, activeTicket1.ID, publicList[0].ID) // 30.00
@@ -149,7 +149,7 @@ func TestTicketRepository_Update(t *testing.T) {
 	// Update fields
 	ticket.Name = "Updated Ticket Name"
 	ticket.Price = 120.00
-	ticket.Status = domain.TicketStatusSoldOut
+	ticket.Status = domain.TicketStatusInactive
 	err := repo.Update(ctx, ticket)
 	require.NoError(t, err)
 
@@ -157,7 +157,7 @@ func TestTicketRepository_Update(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Updated Ticket Name", updated.Name)
 	assert.Equal(t, 120.00, updated.Price)
-	assert.Equal(t, domain.TicketStatusSoldOut, updated.Status)
+	assert.Equal(t, domain.TicketStatusInactive, updated.Status)
 }
 
 func TestTicketRepository_Delete(t *testing.T) {
