@@ -176,5 +176,8 @@ make lint
 - **Environment**: **Disabled by default in Production** (`APP_ENV=production`) unless `ENABLE_ADMIN=true` is explicitly configured with strong credentials.
 - **Description**: Full-featured database & entity management dashboard (AdminLTE theme) for managing Tickets, inventory, roles, permissions, and audit logs.
 
+---
 
+## 📚 Additional Documentation
 
+- [AGENTS.md](./AGENTS.md): Architectural principles, Clean Architecture rules, and guidelines for AI assistants.
