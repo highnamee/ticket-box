@@ -29,6 +29,7 @@ jobs:
 
       - name: Setup Go
         uses: actions/setup-go@v5
+        id: setup-go
         with:
           go-version-file: 'apps/be/go.mod'
           check-latest: true
@@ -49,7 +50,9 @@ jobs:
         id: cache-golangci-lint
         with:
           path: ~/go/bin/golangci-lint
-          key: ${{ runner.os }}-golangci-lint-v1.64
+          key: ${{ runner.os }}-golangci-lint-${{ steps.setup-go.outputs.go-version }}
+          restore-keys: |
+            ${{ runner.os }}-golangci-lint-${{ steps.setup-go.outputs.go-version }}
 
       - name: Install golangci-lint
         if: steps.cache-golangci-lint.outputs.cache-hit != 'true'
