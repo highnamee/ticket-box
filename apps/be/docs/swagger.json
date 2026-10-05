@@ -330,7 +330,7 @@
         },
         "/tickets": {
             "get": {
-                "description": "Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private INACTIVE tickets) with pagination",
+                "description": "Retrieve all public active tickets (excluding private INACTIVE tickets) with pagination",
                 "produces": [
                     "application/json"
                 ],

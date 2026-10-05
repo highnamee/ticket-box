@@ -408,8 +408,8 @@ paths:
       - System
   /tickets:
     get:
-      description: Retrieve all public tickets (ACTIVE and SOLD_OUT, excluding private
-        INACTIVE tickets) with pagination
+      description: Retrieve all public active tickets (excluding private INACTIVE
+        tickets) with pagination
       parameters:
       - default: 1
         description: Page number (default 1, min 1)

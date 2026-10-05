@@ -57,7 +57,7 @@ func (r *TicketRepository) FindPublic(ctx context.Context, page, limit int) ([]d
 
 	baseQuery := r.db.WithContext(ctx).
 		Model(&domain.Ticket{}).
-		Where("status IN ?", []domain.TicketStatus{domain.TicketStatusActive, domain.TicketStatusSoldOut})
+		Where("status = ?", domain.TicketStatusActive)
 
 	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, 0, err

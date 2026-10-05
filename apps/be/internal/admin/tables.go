@@ -29,7 +29,6 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 		FieldFilterable(types.FilterType{FormType: form.SelectSingle}).
 		FieldFilterOptions(types.FieldOptions{
 			{Value: "ACTIVE", Text: "ACTIVE"},
-			{Value: "SOLD_OUT", Text: "SOLD_OUT"},
 			{Value: "INACTIVE", Text: "INACTIVE"},
 		})
 	AddTimestampColumns(info)
@@ -53,7 +52,6 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 	formList.AddField("Status", "status", db.Varchar, form.SelectSingle).
 		FieldOptions(types.FieldOptions{
 			{Value: "ACTIVE", Text: "ACTIVE"},
-			{Value: "SOLD_OUT", Text: "SOLD_OUT"},
 			{Value: "INACTIVE", Text: "INACTIVE"},
 		}).
 		FieldDefault("INACTIVE")

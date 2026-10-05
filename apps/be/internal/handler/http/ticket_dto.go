@@ -21,6 +21,7 @@ type PublicTicketResponse struct {
 	AvailableStock    int                 `json:"available_stock"`
 	MaxBookingPerUser *int                `json:"max_booking_per_user,omitempty"`
 	Status            domain.TicketStatus `json:"status"`
+	IsSoldOut         bool                `json:"is_sold_out"`
 }
 
 func toPublicTicketResponse(t *domain.Ticket) PublicTicketResponse {
@@ -32,6 +33,7 @@ func toPublicTicketResponse(t *domain.Ticket) PublicTicketResponse {
 		AvailableStock:    t.AvailableStock,
 		MaxBookingPerUser: t.MaxBookingPerUser,
 		Status:            t.Status,
+		IsSoldOut:         t.IsSoldOut(),
 	}
 }
 

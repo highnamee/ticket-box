@@ -36,12 +36,11 @@ func (r *BookingRepository) CreateBookingWithLock(ctx context.Context, userID, t
 		updateQuery := `
 			UPDATE tickets
 			SET available_stock = available_stock - ?,
-			    status = CASE WHEN available_stock - ? = 0 THEN ? ELSE status END,
 			    updated_at = CURRENT_TIMESTAMP
 			WHERE id = ? AND status = ? AND available_stock >= ?
 			RETURNING id, name, price, available_stock, max_booking_per_user, status, created_at, updated_at
 		`
-		result := tx.Raw(updateQuery, quantity, quantity, domain.TicketStatusSoldOut, ticketID, domain.TicketStatusActive, quantity).Scan(&ticket)
+		result := tx.Raw(updateQuery, quantity, ticketID, domain.TicketStatusActive, quantity).Scan(&ticket)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -142,11 +141,12 @@ func (r *BookingRepository) diagnoseBookingFailure(tx *gorm.DB, userID, ticketID
 	}
 
 	if existing.Status != domain.TicketStatusActive {
-		if existing.Status == domain.TicketStatusSoldOut {
-			return domain.ErrTicketSoldOut
-		}
 		// INACTIVE is a hidden system status -> ErrTicketNotFound
 		return domain.ErrTicketNotFound
+	}
+
+	if existing.IsSoldOut() {
+		return domain.ErrTicketSoldOut
 	}
 
 	if existing.MaxBookingPerUser != nil {
