@@ -22,9 +22,25 @@ type PublicTicketResponse struct {
 	MaxBookingPerUser *int                `json:"max_booking_per_user,omitempty"`
 	Status            domain.TicketStatus `json:"status"`
 	IsSoldOut         bool                `json:"is_sold_out"`
+	CategoryID        *uuid.UUID          `json:"category_id,omitempty"`
+	Category          string              `json:"category"`
+	Venue             string              `json:"venue"`
+	Date              string              `json:"date"`
+	Time              string              `json:"time"`
+	ImageURL          string              `json:"image_url"`
+	Tags              []string            `json:"tags"`
+	Featured          bool                `json:"featured"`
 }
 
 func toPublicTicketResponse(t *domain.Ticket) PublicTicketResponse {
+	tags := []string(t.Tags)
+	if tags == nil {
+		tags = []string{}
+	}
+	categoryName := ""
+	if t.Category != nil {
+		categoryName = t.Category.Name
+	}
 	return PublicTicketResponse{
 		ID:                t.ID,
 		Name:              t.Name,
@@ -34,6 +50,14 @@ func toPublicTicketResponse(t *domain.Ticket) PublicTicketResponse {
 		MaxBookingPerUser: t.MaxBookingPerUser,
 		Status:            t.Status,
 		IsSoldOut:         t.IsSoldOut(),
+		CategoryID:        t.CategoryID,
+		Category:          categoryName,
+		Venue:             t.Venue,
+		Date:              t.Date,
+		Time:              t.Time,
+		ImageURL:          t.ImageURL,
+		Tags:              tags,
+		Featured:          t.Featured,
 	}
 }
 

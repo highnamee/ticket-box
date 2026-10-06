@@ -118,3 +118,15 @@ func AddNullableIntFormField(formList *types.FormPanel, head, field, placeholder
 		FieldDisplay(NullableIntFormDisplay(field)).
 		FieldPostFilterFn(NullableIntPostFilter())
 }
+
+// NullableUUIDPostFilter converts empty strings from form submissions to nil (SQL NULL).
+func NullableUUIDPostFilter() types.PostFieldFilterFn {
+	return func(value types.PostFieldModel) interface{} {
+		val := strings.TrimSpace(value.Value.Value())
+		if val == "" {
+			return nil
+		}
+		return val
+	}
+}
+
