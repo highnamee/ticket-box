@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Calendar, MapPin, Users, Flame, Ban, ArrowRight } from "lucide-react";
 import { PublicTicket } from "@/types/ticket";
-import { formatVND } from "@/lib/api/tickets";
+import { formatVND } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TicketNotchDivider } from "@/components/ui/ticket-notch";
