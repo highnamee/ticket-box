@@ -187,4 +187,3 @@ func GetCategoryTable(ctx *context.Context) (categoryTable table.Table) {
 
 	return
 }
-

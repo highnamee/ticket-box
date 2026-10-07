@@ -145,4 +145,3 @@ func CSVToTextArrayPostFilter() types.PostFieldFilterFn {
 		return "{" + strings.Join(parts, ",") + "}"
 	}
 }
-
