@@ -27,7 +27,7 @@ func (r *CategoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*domai
 	err := r.db.WithContext(ctx).First(&category, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("category not found")
+			return nil, domain.ErrCategoryNotFound
 		}
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (r *CategoryRepository) FindBySlug(ctx context.Context, slug string) (*doma
 	err := r.db.WithContext(ctx).First(&category, "slug = ?", slug).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("category not found")
+			return nil, domain.ErrCategoryNotFound
 		}
 		return nil, err
 	}

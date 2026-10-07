@@ -38,6 +38,7 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 	info.AddField("Date", "date", db.Varchar)
 	info.AddField("Featured", "featured", db.Boolean).
 		FieldBool()
+	info.AddField("Tags", "tags", db.Text)
 	AddTimestampColumns(info)
 
 	info.SetTable("tickets").
@@ -69,6 +70,10 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 	formList.AddField("Available Stock", "available_stock", db.Int, form.Number).
 		FieldMust()
 	AddNullableIntFormField(formList, "Max Per User", "max_booking_per_user", "Unlimited (leave blank)", "Optional maximum tickets a single user can book. Leave blank for unlimited (NULL).")
+	formList.AddField("Tags", "tags", db.Text, form.Text).
+		FieldPlaceholder("Hot,Music,VIP").
+		FieldHelpMsg("Comma-separated tags (e.g. Hot,Music,VIP). Stored as PostgreSQL text[].").
+		FieldPostFilterFn(CSVToTextArrayPostFilter())
 	formList.AddField("Status", "status", db.Varchar, form.SelectSingle).
 		FieldOptions(types.FieldOptions{
 			{Value: "ACTIVE", Text: "ACTIVE"},

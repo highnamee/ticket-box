@@ -9,7 +9,6 @@ export interface PublicTicket {
   max_booking_per_user?: number | null;
   status: TicketStatus;
   is_sold_out: boolean;
-  category_id?: string | null;
   category: string;
   venue: string;
   date: string;

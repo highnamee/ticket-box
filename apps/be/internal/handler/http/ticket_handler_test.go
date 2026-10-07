@@ -130,7 +130,6 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	require.NotNil(t, res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, 5, *res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, domain.TicketStatusActive, res.Data.Items[0].Status)
-	assert.Equal(t, &categoryID, res.Data.Items[0].CategoryID)
 	assert.Equal(t, "Music", res.Data.Items[0].Category)
 	assert.Equal(t, "Arena", res.Data.Items[0].Venue)
 	assert.Equal(t, "15/11/2026", res.Data.Items[0].Date)
