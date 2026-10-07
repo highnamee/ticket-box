@@ -68,35 +68,29 @@ func SeedTickets(ctx context.Context, db *gorm.DB) error {
 	categoryMap := make(map[string]uuid.UUID)
 
 	for _, cat := range defaultCategories {
-		var existing domain.Category
-		err := db.WithContext(ctx).Where("slug = ? OR name = ?", cat.Slug, cat.Name).First(&existing).Error
-		if err == nil {
-			existing.Name = cat.Name
-			existing.Slug = cat.Slug
-			existing.Description = cat.Description
-			existing.UpdatedAt = time.Now()
-			if err := db.WithContext(ctx).Save(&existing).Error; err != nil {
-				return fmt.Errorf("failed to update category %s: %w", cat.Slug, err)
-			}
-			categoryMap[cat.Slug] = existing.ID
-			slog.Info("Synced category", "id", existing.ID, "name", existing.Name)
-		} else {
-			c := cat
-			c.CreatedAt = time.Now()
-			c.UpdatedAt = time.Now()
-			if err := db.WithContext(ctx).Create(&c).Error; err != nil {
-				return fmt.Errorf("failed to create category %s: %w", c.Slug, err)
-			}
-			categoryMap[cat.Slug] = c.ID
-			slog.Info("Created category", "id", c.ID, "name", c.Name)
+		c := cat
+		c.CreatedAt = time.Now()
+		c.UpdatedAt = time.Now()
+		err := db.WithContext(ctx).
+			Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "slug"}},
+				DoUpdates: clause.AssignmentColumns([]string{"name", "description", "updated_at"}),
+			}).
+			Create(&c).Error
+		if err != nil {
+			return fmt.Errorf("failed to upsert category %s: %w", c.Slug, err)
 		}
+		categoryMap[c.Slug] = c.ID
+		slog.Info("Seeded category", "id", c.ID, "slug", c.Slug)
 	}
 
 	getCatID := func(slug string) *uuid.UUID {
-		if id, ok := categoryMap[slug]; ok {
-			return &id
+		id, ok := categoryMap[slug]
+		if !ok {
+			slog.Warn("Category slug not found in seed map", "slug", slug)
+			return nil
 		}
-		return nil
+		return &id
 	}
 
 	tickets := []domain.Ticket{
@@ -255,7 +249,7 @@ func SeedTickets(ctx context.Context, db *gorm.DB) error {
 	}
 
 	for _, ticket := range tickets {
-		t := ticket
+		t := ticket // copy để lấy địa chỉ ổn định khi pass &t vào GORM
 		err := db.WithContext(ctx).
 			Clauses(clause.OnConflict{
 				Columns: []clause.Column{{Name: "id"}},
