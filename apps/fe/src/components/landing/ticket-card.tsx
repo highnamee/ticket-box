@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Calendar, MapPin, Users, Flame, Ban, ArrowRight } from "lucide-react";
 import { PublicTicket } from "@/types/ticket";
-import { formatVND } from "@/lib/api/tickets";
+import { formatVND } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TicketNotchDivider } from "@/components/ui/ticket-notch";
@@ -15,7 +15,7 @@ interface TicketCardProps {
 }
 
 export function TicketCard({ ticket, onSelect, index = 1 }: TicketCardProps) {
-  const isSoldOut = ticket.is_sold_out || ticket.available_stock <= 0;
+  const isSoldOut = ticket.is_sold_out;
   const isLowStock = !isSoldOut && ticket.available_stock < 20;
 
   return (
@@ -45,7 +45,7 @@ export function TicketCard({ ticket, onSelect, index = 1 }: TicketCardProps) {
           {/* Badges on Banner */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
             <span className="rounded-lg bg-[#faf7f0]/95 px-2.5 py-1 text-xs font-bold text-[#1b4332] shadow-2xs border border-[#ded4c1]/60 backdrop-blur-xs">
-              {ticket.category || "Sự kiện"}
+              {ticket.category}
             </span>
 
             {isSoldOut ? (
@@ -69,9 +69,9 @@ export function TicketCard({ ticket, onSelect, index = 1 }: TicketCardProps) {
           {/* Date & Time Badge */}
           <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-lg bg-[#faf7f0]/95 px-2.5 py-1 text-xs font-semibold text-[#2b241e] border border-[#ded4c1] shadow-2xs">
             <Calendar className="h-3.5 w-3.5 text-[#1b4332]" />
-            <span>{ticket.date || "15/11/2026"}</span>
+            <span>{ticket.date}</span>
             <span className="text-[#b8ab96]">•</span>
-            <span>{ticket.time || "19:30"}</span>
+            <span>{ticket.time}</span>
           </div>
         </div>
 
@@ -83,7 +83,7 @@ export function TicketCard({ ticket, onSelect, index = 1 }: TicketCardProps) {
 
           <div className="flex items-start gap-1.5 text-xs text-[#5c4e40] font-sans">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-[#c2841f] mt-0.5" />
-            <span className="line-clamp-1">{ticket.venue || "Địa điểm cập nhật"}</span>
+            <span className="line-clamp-1">{ticket.venue}</span>
           </div>
 
           <p className="line-clamp-2 text-xs text-[#6e5d4d] leading-relaxed font-sans">

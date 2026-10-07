@@ -56,6 +56,7 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	handler := NewTicketHandler(mockService)
 
 	maxBookingLimit := 5
+	categoryID := uuid.New()
 	mockTickets := []domain.Ticket{
 		{
 			ID:                uuid.New(),
@@ -65,6 +66,14 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 			AvailableStock:    50,
 			MaxBookingPerUser: &maxBookingLimit,
 			Status:            domain.TicketStatusActive,
+			CategoryID:        &categoryID,
+			Category:          &domain.Category{Name: "Music"},
+			Venue:             "Arena",
+			Date:              "15/11/2026",
+			Time:              "19:30",
+			ImageURL:          "https://example.com/img.jpg",
+			Tags:              []string{"Rock", "Live"},
+			Featured:          true,
 			CreatedAt:         time.Now(),
 			UpdatedAt:         time.Now(),
 		},
@@ -121,6 +130,13 @@ func TestTicketHandler_GetPublicTickets_Success(t *testing.T) {
 	require.NotNil(t, res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, 5, *res.Data.Items[0].MaxBookingPerUser)
 	assert.Equal(t, domain.TicketStatusActive, res.Data.Items[0].Status)
+	assert.Equal(t, "Music", res.Data.Items[0].Category)
+	assert.Equal(t, "Arena", res.Data.Items[0].Venue)
+	assert.Equal(t, "15/11/2026", res.Data.Items[0].Date)
+	assert.Equal(t, "19:30", res.Data.Items[0].Time)
+	assert.Equal(t, "https://example.com/img.jpg", res.Data.Items[0].ImageURL)
+	assert.Equal(t, []string{"Rock", "Live"}, res.Data.Items[0].Tags)
+	assert.True(t, res.Data.Items[0].Featured)
 	assert.Equal(t, 0, res.Data.Items[1].AvailableStock)
 	assert.True(t, res.Data.Items[1].IsSoldOut)
 	assert.Nil(t, res.Data.Items[1].MaxBookingPerUser)

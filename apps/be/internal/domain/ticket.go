@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -24,6 +25,14 @@ type Ticket struct {
 	AvailableStock    int            `gorm:"not null;default:0" json:"available_stock"`
 	MaxBookingPerUser *int           `gorm:"default:null" json:"max_booking_per_user,omitempty"`
 	Status            TicketStatus   `gorm:"type:varchar(50);not null;default:'INACTIVE'" json:"status"`
+	CategoryID        *uuid.UUID     `gorm:"type:uuid;index" json:"category_id,omitempty"`
+	Category          *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
+	Venue             string         `gorm:"type:varchar(255);not null;default:''" json:"venue"`
+	Date              string         `gorm:"type:varchar(100);not null;default:''" json:"date"`
+	Time              string         `gorm:"type:varchar(50);not null;default:''" json:"time"`
+	ImageURL          string         `gorm:"type:text;not null;default:''" json:"image_url"`
+	Tags              pq.StringArray `gorm:"type:text[];not null;default:'{}'" json:"tags"`
+	Featured          bool           `gorm:"type:boolean;not null;default:false" json:"featured"`
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 	DeletedAt         gorm.DeletedAt `gorm:"index" json:"-"`

@@ -31,6 +31,14 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 			{Value: "ACTIVE", Text: "ACTIVE"},
 			{Value: "INACTIVE", Text: "INACTIVE"},
 		})
+	info.AddField("Category ID", "category_id", db.UUID).
+		FieldSortable().
+		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
+	info.AddField("Venue", "venue", db.Varchar)
+	info.AddField("Date", "date", db.Varchar)
+	info.AddField("Featured", "featured", db.Boolean).
+		FieldBool()
+	info.AddField("Tags", "tags", db.Text)
 	AddTimestampColumns(info)
 
 	info.SetTable("tickets").
@@ -41,6 +49,19 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 	AddIDFormField(formList)
 	formList.AddField("Name", "name", db.Varchar, form.Text).
 		FieldMust()
+	formList.AddField("Category", "category_id", db.UUID, form.Select).
+		FieldOptionsFromTable("categories", "name", "id").
+		FieldPostFilterFn(NullableUUIDPostFilter())
+	formList.AddField("Venue", "venue", db.Varchar, form.Text)
+	formList.AddField("Date", "date", db.Varchar, form.Text)
+	formList.AddField("Time", "time", db.Varchar, form.Text)
+	formList.AddField("Image URL", "image_url", db.Text, form.Text)
+	formList.AddField("Featured", "featured", db.Boolean, form.Radio).
+		FieldOptions(types.FieldOptions{
+			{Value: "true", Text: "Yes"},
+			{Value: "false", Text: "No"},
+		}).
+		FieldDefault("false")
 	formList.AddField("Description", "description", db.Text, form.TextArea)
 	formList.AddField("Price ($)", "price", db.Decimal, form.Currency).
 		FieldMust()
@@ -49,6 +70,10 @@ func GetTicketTable(ctx *context.Context) (ticketTable table.Table) {
 	formList.AddField("Available Stock", "available_stock", db.Int, form.Number).
 		FieldMust()
 	AddNullableIntFormField(formList, "Max Per User", "max_booking_per_user", "Unlimited (leave blank)", "Optional maximum tickets a single user can book. Leave blank for unlimited (NULL).")
+	formList.AddField("Tags", "tags", db.Text, form.Text).
+		FieldPlaceholder("Hot,Music,VIP").
+		FieldHelpMsg("Comma-separated tags (e.g. Hot,Music,VIP). Stored as PostgreSQL text[].").
+		FieldPostFilterFn(CSVToTextArrayPostFilter())
 	formList.AddField("Status", "status", db.Varchar, form.SelectSingle).
 		FieldOptions(types.FieldOptions{
 			{Value: "ACTIVE", Text: "ACTIVE"},
@@ -123,6 +148,42 @@ func GetUserTable(ctx *context.Context) (userTable table.Table) {
 	formList.SetTable("users").
 		SetTitle("User Details").
 		SetDescription("View and update user status and role")
+
+	return
+}
+
+// GetCategoryTable returns the table definition for Category model management
+func GetCategoryTable(ctx *context.Context) (categoryTable table.Table) {
+	categoryTable = NewUUIDTable(ctx)
+
+	info := categoryTable.GetInfo().SetFilterFormLayout(form.LayoutTwoCol)
+	AddIDColumn(info)
+	info.AddField("Name", "name", db.Varchar).
+		FieldSortable().
+		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
+	info.AddField("Slug", "slug", db.Varchar).
+		FieldSortable().
+		FieldFilterable(types.FilterType{Operator: types.FilterOperatorLike})
+	info.AddField("Description", "description", db.Text)
+	AddTimestampColumns(info)
+
+	info.SetTable("categories").
+		SetTitle("Categories").
+		SetDescription("Manage Event Categories")
+
+	formList := categoryTable.GetForm()
+	AddIDFormField(formList)
+	formList.AddField("Name", "name", db.Varchar, form.Text).
+		FieldMust()
+	formList.AddField("Slug", "slug", db.Varchar, form.Text).
+		FieldMust()
+	formList.AddField("Description", "description", db.Text, form.TextArea)
+	AddTimestampFormFields(formList)
+	WithAutoTimestamps(formList)
+
+	formList.SetTable("categories").
+		SetTitle("Category Details").
+		SetDescription("Create or update event category")
 
 	return
 }
