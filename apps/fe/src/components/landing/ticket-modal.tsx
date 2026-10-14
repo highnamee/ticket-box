@@ -14,7 +14,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { PublicTicket } from "@/types/ticket";
-import { formatVND } from "@/lib/api/tickets";
+import { formatVND } from "@/lib/utils/format";
 import {
   Dialog,
   DialogContent,

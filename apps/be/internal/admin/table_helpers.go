@@ -118,3 +118,30 @@ func AddNullableIntFormField(formList *types.FormPanel, head, field, placeholder
 		FieldDisplay(NullableIntFormDisplay(field)).
 		FieldPostFilterFn(NullableIntPostFilter())
 }
+
+// NullableUUIDPostFilter converts empty strings from form submissions to nil (SQL NULL).
+func NullableUUIDPostFilter() types.PostFieldFilterFn {
+	return func(value types.PostFieldModel) interface{} {
+		val := strings.TrimSpace(value.Value.Value())
+		if val == "" {
+			return nil
+		}
+		return val
+	}
+}
+
+// CSVToTextArrayPostFilter converts a comma-separated string (e.g. "Hot,Music,VIP")
+// into a PostgreSQL text[] literal (e.g. "{Hot,Music,VIP}") for storage in text[] columns.
+func CSVToTextArrayPostFilter() types.PostFieldFilterFn {
+	return func(value types.PostFieldModel) interface{} {
+		val := strings.TrimSpace(value.Value.Value())
+		if val == "" {
+			return "{}"
+		}
+		parts := strings.Split(val, ",")
+		for i, p := range parts {
+			parts[i] = strings.TrimSpace(p)
+		}
+		return "{" + strings.Join(parts, ",") + "}"
+	}
+}

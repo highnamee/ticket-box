@@ -103,7 +103,7 @@ docker run --rm -p 3000:3000 ticket-box-fe:latest
 
 The Go backend runs at `http://localhost:8080/api/v1`. 
 
-The frontend integrates with public ticket endpoints (`/tickets`) matching the `PublicTicketResponse` DTO structure. In development, the application includes a comprehensive mock dataset (`MOCK_PUBLIC_TICKETS`) in `src/lib/api/tickets.ts` for offline testing.
+The frontend integrates with public ticket endpoints (`/tickets`) matching the `PublicTicketResponse` DTO structure. Ensure the Go backend is running or seeded to view available tickets.
 
 To connect to a live backend instance, set `NEXT_PUBLIC_API_URL` in `.env.local`:
 ```env

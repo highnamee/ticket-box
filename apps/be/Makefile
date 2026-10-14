@@ -1,4 +1,4 @@
-.PHONY: help setup run build test test-coverage lint fmt vet tidy clean migrate swagger admin-generate
+.PHONY: help setup run build test test-coverage lint fmt vet tidy clean migrate seed swagger admin-generate
 
 # Default binary name
 BIN_DIR = bin
@@ -22,6 +22,9 @@ setup: ## Install required development tools (adm, swag, golangci-lint) and depe
 
 run: ## Run application locally
 	go run ./cmd/api/main.go
+
+seed: ## Seed database with initial event tickets matching frontend catalog
+	go run ./cmd/seed/main.go
 
 migrate: ## Run database migrations (Up)
 	go run ./cmd/migrate/main.go up
@@ -51,7 +54,7 @@ build: ## Build binary executable
 	go build -o $(BIN_DIR)/$(BIN_NAME) ./cmd/api/main.go
 
 test: ## Run unit and integration tests with race detection
-	go test -v -race ./internal/...
+	go test -v -race -p 1 ./internal/...
 
 test-coverage: ## Run tests with code coverage report
 	go test -race -coverprofile=coverage.out ./internal/...

@@ -24,7 +24,7 @@ func (r *TicketRepository) Create(ctx context.Context, ticket *domain.Ticket) er
 
 func (r *TicketRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Ticket, error) {
 	var ticket domain.Ticket
-	err := r.db.WithContext(ctx).First(&ticket, "id = ?", id).Error
+	err := r.db.WithContext(ctx).Preload("Category").First(&ticket, "id = ?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, domain.ErrTicketNotFound
@@ -37,6 +37,7 @@ func (r *TicketRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.
 func (r *TicketRepository) FindAll(ctx context.Context) ([]domain.Ticket, error) {
 	var tickets []domain.Ticket
 	err := r.db.WithContext(ctx).
+		Preload("Category").
 		Order("price ASC").
 		Find(&tickets).Error
 	return tickets, err
@@ -65,6 +66,7 @@ func (r *TicketRepository) FindPublic(ctx context.Context, page, limit int) ([]d
 
 	offset := (page - 1) * limit
 	err := baseQuery.
+		Preload("Category").
 		Order("price ASC").
 		Offset(offset).
 		Limit(limit).
